@@ -1,5 +1,5 @@
 import React from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { Link, Redirect } from 'react-router-dom'
 import { useInputChange } from 'helpers'
 import * as auth from 'features/auth/store'
@@ -14,10 +14,8 @@ function Register() {
     password: '',
     password_confirmation: '',
   })
-  const dispatch = useDispatch()
   const onSubmit = e => {
     e.preventDefault()
-    dispatch(auth.Register(input))
   }
   const user = useSelector(auth.SelectUser)
 

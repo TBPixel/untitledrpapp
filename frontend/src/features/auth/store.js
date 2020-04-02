@@ -21,16 +21,6 @@ export const slice = createSlice({
         mini,
       }
     },
-    Register: (state, action) => {
-      const { id, name } = action.payload
-
-      state.user = {
-        id,
-        name,
-        picture: '',
-        mini: '',
-      }
-    },
     Logout: state => {
       state.user = {
         id: -1,
@@ -42,7 +32,7 @@ export const slice = createSlice({
   },
 })
 
-export const { Login, Register, Logout } = slice.actions
+export const { Login, Logout } = slice.actions
 
 export const SelectUser = state => {
   if (state.auth.user.id === -1) {
