@@ -35,11 +35,6 @@ func (a Auth) Authenticate(email, password string) (*backend.User, error) {
 }
 
 func (a Auth) Register(email, username, password string) (*backend.User, error) {
-	u, _ := a.store.FindFromEmail(email)
-	if u != nil {
-		return nil, fmt.Errorf("a user with the email %s already exists", email)
-	}
-
 	u, err := a.store.Create(email, username, password)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register new user: %v", err)
