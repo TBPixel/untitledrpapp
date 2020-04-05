@@ -291,15 +291,15 @@ func (c *client) Receiving() {
 	for {
 		select {
 		case msg, ok := <-c.read:
-			if msg.UserID == c.user.ID {
-				continue
-			}
-
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
+			}
+
+			if c != nil && msg.UserID == c.user.ID {
+				continue
 			}
 
 			err := c.conn.WriteJSON(&msg)
