@@ -27,19 +27,6 @@ const (
 	maxMessageSize = 512
 )
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		origin := r.Header.Get("origin")
-		if strings.Contains(origin, "localhost") {
-			return true
-		}
-
-		return false
-	},
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
-
 // Hub provides a manager for many clients to connect
 // and message via web sockets
 type Hub struct {
@@ -47,6 +34,8 @@ type Hub struct {
 	context context.Context
 
 	user UserManager
+
+	upgrader websocket.Upgrader
 
 	// a lookup table for connected clients
 	clients map[string]*client
@@ -103,8 +92,8 @@ type message struct {
 
 // NewHub returns a websocket connection hub for broadcasting
 // messages between clients
-func NewHub(user UserManager, ctx context.Context) *Hub {
-	return &Hub{
+func NewHub(domain string, user UserManager, ctx context.Context) *Hub {
+	h := &Hub{
 		context:    ctx,
 		user:       user,
 		broadcast:  make(chan *message),
@@ -115,6 +104,21 @@ func NewHub(user UserManager, ctx context.Context) *Hub {
 		clients:    make(map[string]*client),
 		groups:     make(map[string]map[string]*client),
 	}
+
+	h.upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			origin := r.Header.Get("origin")
+			if strings.Contains(origin, domain) {
+				return true
+			}
+
+			return false
+		},
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+
+	return h
 }
 
 // Listen infinitely loops all Hub channels and handles
@@ -177,7 +181,7 @@ func (h *Hub) Listen() {
 // Implementors should call Listen on the client, either in a new goroutine or
 // by reusing the http handler goroutine.
 func (h *Hub) Upgrade(user *backend.User, w http.ResponseWriter, r *http.Request) (*client, error) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upgrade client to websocket connection: %v", err)
 	}
