@@ -108,11 +108,8 @@ func NewHub(domain string, user UserManager, ctx context.Context) *Hub {
 	h.upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			origin := r.Header.Get("origin")
-			if strings.Contains(origin, domain) {
-				return true
-			}
 
-			return false
+			return strings.Contains(origin, domain)
 		},
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,

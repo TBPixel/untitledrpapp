@@ -39,7 +39,7 @@ func main() {
 	hub := http.NewHub(domain, users, ctx)
 	go hub.Listen()
 
-	server := http.NewServer(auth, chats, users, sessions, hub, ctx)
+	server := http.NewServer(domain, auth, chats, users, sessions, hub, ctx)
 
 	address := fmt.Sprintf("%s:%s", domain, port)
 	log.Printf("server listening @ http://%s", address)

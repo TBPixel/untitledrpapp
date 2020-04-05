@@ -9,6 +9,8 @@ import (
 
 // Server provides an HTTP implementation for the application
 type Server struct {
+	domain string
+
 	auth AuthManager
 	chat ChatManager
 	user UserManager
@@ -19,8 +21,9 @@ type Server struct {
 }
 
 // NewServer pre-constructs a server instance
-func NewServer(auth AuthManager, chat ChatManager, user UserManager, sessions sessions.Store, hub *Hub, context context.Context) *Server {
+func NewServer(domain string, auth AuthManager, chat ChatManager, user UserManager, sessions sessions.Store, hub *Hub, context context.Context) *Server {
 	s := &Server{
+		domain:   domain,
 		auth:     auth,
 		chat:     chat,
 		user:     user,
