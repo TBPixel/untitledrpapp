@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/gob"
+	"net/http"
 
 	"github.com/gorilla/sessions"
 	"github.com/tbpixel/rp-app/backend"
@@ -15,6 +16,8 @@ func NewSessionStore(key []byte, path string) sessions.Store {
 		Path:     "/",
 		MaxAge:   86400 * 30,
 		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
 	}
 
 	gob.Register(&backend.User{})
