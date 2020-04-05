@@ -11,10 +11,13 @@ export const slice = createSlice({
 
       state.users.push(...users)
     },
+    Empty: (state) => {
+      state.users = []
+    },
   },
 })
 
-export const { PushUsers } = slice.actions
+export const { PushUsers, Empty } = slice.actions
 export const SelectUsers = (state) => state.discovery.users
 
 export default slice.reducer

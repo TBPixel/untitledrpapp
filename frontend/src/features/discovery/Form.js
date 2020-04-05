@@ -30,6 +30,7 @@ function Form() {
       content: u.content || '',
     }))
 
+    dispatch(discovery.Empty())
     dispatch(discovery.PushUsers({ users }))
   }
 
