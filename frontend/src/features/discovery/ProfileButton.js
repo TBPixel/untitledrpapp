@@ -1,24 +1,32 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { useDispatch, useSelector } from 'react-redux'
-import * as auth from 'features/auth/store'
+import useFetch from 'use-http'
+import { useDispatch } from 'react-redux'
+import config from 'conf'
 import * as chats from 'features/chats/store'
 import MiniProfile from 'features/chats/MiniProfile'
 
 function ProfileButton({ id, name, picture, content }) {
   const dispatch = useDispatch()
-  const user = useSelector(auth.SelectUser)
+  const [request, response] = useFetch(config.api.host, {
+    credentials: 'include',
+  })
 
-  const onClick = () => {
-    dispatch(
-      chats.Create({
-        id,
-        name,
-        content,
-        picture,
-        participants: [user, { id, name, picture }],
-      })
-    )
+  const onClick = async () => {
+    const chat = await request.post('/api/chats', {
+      participants: [id],
+    })
+    if (!response.ok) {
+      return
+    }
+
+    const participants = chat.participants.map((u) => ({
+      id: u.id,
+      name: u.username,
+      picture: u.picture || '',
+    }))
+
+    dispatch(chats.Create({ id: chat.chat_id, name, participants }))
   }
 
   return (
@@ -29,9 +37,10 @@ function ProfileButton({ id, name, picture, content }) {
 }
 
 ProfileButton.propTypes = {
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
   picture: PropTypes.string,
   content: PropTypes.string,
-  name: PropTypes.string.isRequired,
 }
 
 export default ProfileButton

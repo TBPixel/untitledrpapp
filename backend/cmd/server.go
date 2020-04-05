@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"encoding/gob"
 	"flag"
 	"log"
+	"os"
 
-	"github.com/tbpixel/rp-app/backend"
+	"github.com/tbpixel/rp-app/backend/chat"
 
 	"github.com/tbpixel/rp-app/backend/user"
 
@@ -21,13 +21,15 @@ func main() {
 
 	ctx := context.Background()
 
-	auth := user.NewAuth(user.NewMemoryStore())
-	sessions := http.NewSessionStore([]byte(*secret))
-	hub := http.NewHub(ctx)
+	userStore := user.NewMemoryStore()
+	auth := user.NewAuth(userStore)
+	chats := chat.NewManager(chat.NewMemoryStore())
+	users := user.New(userStore)
+	sessions := http.NewSessionStore([]byte(*secret), os.TempDir())
+	hub := http.NewHub(users, ctx)
 	go hub.Listen()
 
-	gob.Register(&backend.User{})
-	server := http.NewServer(auth, sessions, hub, ctx)
+	server := http.NewServer(auth, chats, users, sessions, hub, ctx)
 
 	log.Printf("server listening @ http://localhost%s", *addr)
 	log.Fatal(http.ListenAndServe(*addr, server))

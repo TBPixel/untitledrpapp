@@ -1,17 +1,36 @@
 import React from 'react'
+import useFetch from 'use-http'
+import { useDispatch } from 'react-redux'
 import { MdSearch } from 'react-icons/md'
+import config from 'conf'
 import { useInputChange } from 'helpers'
+import * as discovery from 'features/discovery/store'
 import * as forms from 'components/forms'
 import Button from 'components/Button'
 
 function Form() {
+  const dispatch = useDispatch()
+  const [request, response] = useFetch(config.api.host, {
+    credentials: 'include',
+  })
   const [input, onInputChange] = useInputChange({
     query: '',
   })
-  const onSearch = e => {
+  const onSearch = async (e) => {
     e.preventDefault()
 
-    console.log(input)
+    const data = await request.get('/api/active')
+    if (!response.ok) {
+      return
+    }
+    const users = data.users.map((u) => ({
+      id: u.id,
+      name: u.username,
+      picture: u.picture || '',
+      content: u.content || '',
+    }))
+
+    dispatch(discovery.PushUsers({ users }))
   }
 
   return (
@@ -22,15 +41,15 @@ function Form() {
           value={input.query}
           setValue={onInputChange}
           placeholder="Search"
-          required
           hideLabel
-          className="border-gray-400">
+          className="border-gray-400"
+          disabled={request.loading}>
           Search
         </forms.TextInput>
       </div>
 
       <div>
-        <Button type="submit" disabled={!input.query}>
+        <Button type="submit" disabled={request.loading}>
           <MdSearch size={20} />
         </Button>
       </div>

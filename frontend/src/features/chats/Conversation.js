@@ -32,7 +32,7 @@ function Conversation({ id, name, picture, isFocussed }) {
 }
 
 Conversation.propTypes = {
-  id: PropTypes.number.isRequired,
+  id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   isFocussed: PropTypes.bool.isRequired,
   picture: PropTypes.string,

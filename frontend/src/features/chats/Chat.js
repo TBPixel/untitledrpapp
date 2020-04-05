@@ -1,13 +1,36 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import * as chats from 'features/chats/store'
 import Form from 'features/chats/Form'
 import History from 'features/chats/History'
 import MiniProfile from 'features/chats/MiniProfile'
 
-function Chat({ id }) {
+function Chat({ id, sender }) {
+  const dispatch = useDispatch()
   const chat = useSelector(chats.SelectChatByID(id))
+  const lastMessage = useSelector(chats.SelectLastMessage)
+  useEffect(() => {
+    if (!lastMessage) {
+      return
+    }
+
+    if (lastMessage.chat.id !== id) {
+      return
+    }
+
+    const sender = lastMessage.chat.participants.find(
+      (u) => u.id === lastMessage.user_id
+    )
+
+    dispatch(
+      chats.PushMessage({
+        conversationID: id,
+        participant: sender,
+        body: lastMessage.body,
+      })
+    )
+  }, [lastMessage, id, dispatch])
 
   return (
     <div className="flex flex-col h-full">
@@ -26,14 +49,22 @@ function Chat({ id }) {
       </div>
 
       <div>
-        <Form conversationID={id} name={chat.name} />
+        <Form
+          conversationID={id}
+          name={chat.name}
+          sender={sender}
+          mini={chat.mini}
+          picture={chat.picture}
+          participants={chat.participants}
+        />
       </div>
     </div>
   )
 }
 
 Chat.propTypes = {
-  id: PropTypes.number.isRequired,
+  id: PropTypes.string.isRequired,
+  sender: PropTypes.func.isRequired,
 }
 
 export default Chat

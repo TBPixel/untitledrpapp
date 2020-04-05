@@ -1,7 +1,8 @@
 import React from 'react'
+import Chrome from 'components/Chrome'
 
 function Home() {
-  return <div>Home Component</div>
+  return <Chrome>Home</Chrome>
 }
 
 export default Home

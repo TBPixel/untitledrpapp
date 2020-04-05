@@ -3,20 +3,27 @@ package http
 import (
 	"context"
 	"net/http"
+
+	"github.com/gorilla/sessions"
 )
 
 // Server provides an HTTP implementation for the application
 type Server struct {
-	auth     AuthManager
+	auth AuthManager
+	chat ChatManager
+	user UserManager
+
 	context  context.Context
 	hub      *Hub
-	sessions *SessionStore
+	sessions sessions.Store
 }
 
 // NewServer pre-constructs a server instance
-func NewServer(auth AuthManager, sessions *SessionStore, hub *Hub, context context.Context) *Server {
+func NewServer(auth AuthManager, chat ChatManager, user UserManager, sessions sessions.Store, hub *Hub, context context.Context) *Server {
 	s := &Server{
 		auth:     auth,
+		chat:     chat,
+		user:     user,
 		context:  context,
 		hub:      hub,
 		sessions: sessions,

@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import ReactHtmlParser from 'react-html-parser'
 
-const filterDangerousTags = node => {
+const filterDangerousTags = (node) => {
   const tags = [
     'html',
     'head',
@@ -26,10 +26,6 @@ const filterDangerousTags = node => {
   return null
 }
 
-const convertToKebabCase = str => {
-  return str.replace(/\s+/g, '-').toLowerCase()
-}
-
 function MiniProfile({ name, picture, content }) {
   const body = String(content).trim()
   const hasBody = Boolean(body.length)
@@ -39,9 +35,7 @@ function MiniProfile({ name, picture, content }) {
   const render = html.length > 0 ? html : body
 
   return (
-    <div
-      id={`#${convertToKebabCase(name)}`}
-      className="flex justify-start items-start">
+    <div className="flex justify-start items-start">
       {hasBody ? (
         render
       ) : (

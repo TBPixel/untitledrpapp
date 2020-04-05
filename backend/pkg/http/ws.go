@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/tbpixel/rp-app/backend"
@@ -27,6 +28,14 @@ const (
 )
 
 var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		origin := r.Header.Get("origin")
+		if strings.Contains(origin, "localhost") {
+			return true
+		}
+
+		return false
+	},
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
@@ -36,6 +45,8 @@ var upgrader = websocket.Upgrader{
 type Hub struct {
 	// app context for top-level cancellation
 	context context.Context
+
+	user UserManager
 
 	// a lookup table for connected clients
 	clients map[string]*client
@@ -60,7 +71,8 @@ type Hub struct {
 }
 
 type client struct {
-	id   string
+	user *backend.User
+
 	hub  *Hub
 	conn *websocket.Conn
 	read chan *message
@@ -71,17 +83,30 @@ type move struct {
 	client *client
 }
 
+type participant struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Picture  string `json:"picture"`
+	Mini     string `json:"mini"`
+}
+
+type chat struct {
+	ID           string         `json:"id"`
+	Participants []*participant `json:"participants"`
+}
+
 type message struct {
 	UserID string `json:"user_id"`
-	ChatID string `json:"chat_id"`
-	Body   string `json:"Body"`
+	Body   string `json:"body"`
+	Chat   *chat  `json:"chat"`
 }
 
 // NewHub returns a websocket connection hub for broadcasting
 // messages between clients
-func NewHub(ctx context.Context) *Hub {
+func NewHub(user UserManager, ctx context.Context) *Hub {
 	return &Hub{
 		context:    ctx,
+		user:       user,
 		broadcast:  make(chan *message),
 		connect:    make(chan *client),
 		disconnect: make(chan *client),
@@ -98,33 +123,34 @@ func (h *Hub) Listen() {
 	for {
 		select {
 		case client := <-h.connect:
-			h.clients[client.id] = client
+			h.clients[client.user.ID] = client
+			h.user.AddActive(client.user)
 		case client := <-h.disconnect:
-			if _, ok := h.clients[client.id]; !ok {
+			if _, ok := h.clients[client.user.ID]; !ok {
 				continue
 			}
 
-			delete(h.clients, client.id)
+			delete(h.clients, client.user.ID)
 			close(client.read)
 		case join := <-h.join:
 			if _, ok := h.groups[join.chatID]; !ok {
 				h.groups[join.chatID] = make(map[string]*client)
 			}
 
-			h.groups[join.chatID][join.client.id] = join.client
+			h.groups[join.chatID][join.client.user.ID] = join.client
 		case leave := <-h.leave:
-			if _, ok := h.groups[leave.chatID][leave.client.id]; !ok {
+			if _, ok := h.groups[leave.chatID][leave.client.user.ID]; !ok {
 				continue
 			}
 
-			delete(h.groups[leave.chatID], leave.client.id)
+			delete(h.groups[leave.chatID], leave.client.user.ID)
 
 			// cleanup empty group references
 			if len(h.groups[leave.chatID]) == 0 {
 				delete(h.groups, leave.chatID)
 			}
 		case message := <-h.broadcast:
-			group, ok := h.groups[message.ChatID]
+			group, ok := h.groups[message.Chat.ID]
 			if !ok {
 				continue
 			}
@@ -139,7 +165,7 @@ func (h *Hub) Listen() {
 			close(h.leave)
 			close(h.broadcast)
 			for _, client := range h.clients {
-				delete(h.clients, client.id)
+				delete(h.clients, client.user.ID)
 				close(client.read)
 			}
 		}
@@ -150,13 +176,13 @@ func (h *Hub) Listen() {
 //
 // Implementors should call Listen on the client, either in a new goroutine or
 // by reusing the http handler goroutine.
-func (h *Hub) Upgrade(id string, w http.ResponseWriter, r *http.Request) (*client, error) {
+func (h *Hub) Upgrade(user *backend.User, w http.ResponseWriter, r *http.Request) (*client, error) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upgrade client to websocket connection: %v", err)
 	}
 	return &client{
-		id:   id,
+		user: user,
 		hub:  h,
 		conn: conn,
 		read: make(chan *message),
@@ -228,13 +254,12 @@ func (h *Hub) Leave(userID, chatID string) error {
 // the socket streams
 //
 // Listen should be called using a goroutine
-func (c *client) Listen() error {
-	// enter the connection hub on Listen
+func (c *client) Connect() {
 	c.hub.connect <- c
+}
 
-	ticker := time.NewTicker(pingPeriod)
+func (c *client) Sending() {
 	defer func() {
-		ticker.Stop()
 		c.hub.disconnect <- c
 		c.conn.Close()
 	}()
@@ -242,59 +267,51 @@ func (c *client) Listen() error {
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	for {
+		var msg message
+		if err := c.conn.ReadJSON(&msg); err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("error %v", err)
+			}
+			break
+		}
+
+		c.hub.broadcast <- &msg
+	}
+}
+
+func (c *client) Receiving() {
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		c.conn.Close()
+	}()
 
 	for {
-		err := c.sending()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				return fmt.Errorf("client websocket closed while reading: %v", err)
+		select {
+		case msg, ok := <-c.read:
+			if msg.UserID == c.user.ID {
+				continue
 			}
 
-			return fmt.Errorf("error while reading from client websocket: %v", err)
-		}
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if !ok {
+				// The hub closed the channel.
+				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
 
-		err = c.receiving(ticker)
-		if err != nil {
-			log.Printf("error while writing to the client websocket: %v", err)
-		}
-	}
-}
-
-// todo: investigate sending and receiving to see if they block
-func (c *client) sending() error {
-	var msg message
-	err := c.conn.ReadJSON(&msg)
-	c.conn.ReadMessage()
-	if err != nil {
-		return err
-	}
-	c.hub.broadcast <- &msg
-
-	return nil
-}
-
-func (c *client) receiving(ticker *time.Ticker) error {
-	select {
-	case msg, ok := <-c.read:
-		c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-		if !ok {
-			// The Hub closed the channel.
-			return c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-		}
-
-		err := c.conn.WriteJSON(msg)
-		if err != nil {
-			log.Printf("error while sending json message to client: %v", err)
-			return nil
-		}
-	case <-ticker.C:
-		c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-		if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-			return err
+			err := c.conn.WriteJSON(&msg)
+			if err != nil {
+				return
+			}
+		case <-ticker.C:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
 		}
 	}
-
-	return nil
 }
 
 func (s *Server) handleWebsocketConnect(w http.ResponseWriter, r *http.Request) {
@@ -305,13 +322,15 @@ func (s *Server) handleWebsocketConnect(w http.ResponseWriter, r *http.Request) 
 	}
 
 	user := session.Values["auth"].(*backend.User)
-	client, err := s.hub.Upgrade(user.ID, w, r)
+	client, err := s.hub.Upgrade(user, w, r)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
+	client.Connect()
 	// Listen in a new goroutine so existing http
 	// resources can be freed up
-	go client.Listen()
+	go client.Receiving()
+	go client.Sending()
 }

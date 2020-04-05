@@ -1,7 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { ReadyState } from 'react-use-websocket'
 
 const windowProto = {
-  id: -1,
+  id: '',
   name: '',
   mini: '',
   picture: '',
@@ -14,11 +15,15 @@ export const slice = createSlice({
   initialState: {
     open: -1,
     windows: [],
+    socket: {
+      state: ReadyState.CONNECTING,
+      lastMessage: null,
+    },
   },
   reducers: {
     Focus: (state, action) => {
       const { id } = action.payload
-      const index = state.windows.findIndex(w => w.id === id)
+      const index = state.windows.findIndex((w) => w.id === id)
       if (index === -1) {
         return
       }
@@ -27,7 +32,7 @@ export const slice = createSlice({
     },
     Create: (state, action) => {
       const { id, name, picture, content, participants } = action.payload
-      const index = state.windows.findIndex(w => w.id === id)
+      const index = state.windows.findIndex((w) => w.id === id)
       if (index !== -1) {
         state.open = index
         return
@@ -45,7 +50,7 @@ export const slice = createSlice({
     },
     Destroy: (state, action) => {
       const { id } = action.payload
-      const index = state.windows.findIndex(c => c.id === id)
+      const index = state.windows.findIndex((w) => w.id === id)
       if (index === -1) {
         return
       }
@@ -57,8 +62,8 @@ export const slice = createSlice({
       state.windows.splice(index, 1)
     },
     PushMessage: (state, action) => {
-      const { conversationID, participantID, body } = action.payload
-      const index = state.windows.findIndex(w => w.id === conversationID)
+      const { conversationID, participant, body } = action.payload
+      const index = state.windows.findIndex((w) => w.id === conversationID)
       if (index === -1) {
         return
       }
@@ -66,14 +71,31 @@ export const slice = createSlice({
       state.windows[index].messages.push({
         body,
         id: state.windows[index].messages.length + 1,
-        participant: participantID,
+        participant: participant,
       })
+    },
+    SetSocketState: (state, action) => {
+      const { readyState } = action.payload
+
+      state.socket.state = readyState
+    },
+    SetLastMessage: (state, action) => {
+      const { lastMessage } = action.payload
+
+      state.socket.lastMessage = lastMessage
     },
   },
 })
 
-export const { Focus, Create, Destroy, PushMessage } = slice.actions
-export const SelectOpenConversation = state => {
+export const {
+  Focus,
+  Create,
+  Destroy,
+  PushMessage,
+  SetSocketState,
+  SetLastMessage,
+} = slice.actions
+export const SelectOpenConversation = (state) => {
   const open = state.chats.open
   if (open === -1) {
     return null
@@ -81,14 +103,16 @@ export const SelectOpenConversation = state => {
 
   return state.chats.windows[open]
 }
-export const SelectChats = state => state.chats.windows
-export const SelectChatByID = id => state => {
-  const chat = state.chats.windows.find(w => w.id === id)
+export const SelectChats = (state) => state.chats.windows
+export const SelectChatByID = (id) => (state) => {
+  const chat = state.chats.windows.find((w) => w.id === id)
   if (chat === undefined) {
     return null
   }
 
   return chat
 }
+export const SelectSocket = (state) => state.chats.socket
+export const SelectLastMessage = (state) => state.chats.socket.lastMessage
 
 export default slice.reducer

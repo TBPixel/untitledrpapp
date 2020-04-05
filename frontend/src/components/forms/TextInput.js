@@ -11,6 +11,7 @@ function TextInput({
   value,
   setValue,
   className,
+  disabled,
 }) {
   return (
     <>
@@ -22,15 +23,17 @@ function TextInput({
         {children}
       </label>
       <input
-        onChange={e => setValue(e)}
+        onChange={(e) => setValue(e)}
         value={value || ''}
         name={name}
         type={type || 'text'}
         id={name}
         required={required}
         placeholder={placeholder}
-        className={`${className ||
-          ''} appearance-none bg-transparent border-b-4 border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-700`}
+        disabled={disabled || false}
+        className={`${
+          className || ''
+        } appearance-none bg-transparent border-b-4 border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-700`}
       />
     </>
   )
@@ -45,6 +48,7 @@ TextInput.propTypes = {
   required: PropTypes.bool,
   hideLabel: PropTypes.bool,
   className: PropTypes.string,
+  disabled: PropTypes.bool,
 }
 
 export default TextInput

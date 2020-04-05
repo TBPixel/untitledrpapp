@@ -1,79 +1,64 @@
 package user
 
 import (
-	"errors"
-	"fmt"
+	"sync"
 
 	"github.com/tbpixel/rp-app/backend"
 )
 
-type Auth struct {
-	store Store
-}
-
-func NewAuth(store Store) *Auth {
-	return &Auth{store}
-}
-
 type Store interface {
-	FindFromEmail(email string) (*backend.User, error)
+	Find(id string) (*backend.User, error)
+	FindByEmail(email string) (*backend.User, error)
+	FindByName(name string) (*backend.User, error)
 	Create(email, username, password string) (*backend.User, error)
 }
 
-func (a Auth) Authenticate(email, password string) (*backend.User, error) {
-	u, err := a.store.FindFromEmail(email)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find user with email %s to authenticate", email)
-	}
-
-	// TODO: compare password hashes
-	if password != u.Password {
-		return nil, errors.New("no user with that matching email and password")
-	}
-
-	return u, nil
+// Manager provides full CRUD access to managing users
+type Manager struct {
+	store  Store
+	mutex  *sync.RWMutex
+	active map[string]*backend.User
 }
 
-func (a Auth) Register(email, username, password string) (*backend.User, error) {
-	u, err := a.store.Create(email, username, password)
-	if err != nil {
-		return nil, fmt.Errorf("failed to register new user: %v", err)
-	}
-
-	return u, nil
-}
-
-type MemoryStore struct {
-	users map[string]*backend.User
-}
-
-func NewMemoryStore() *MemoryStore {
-	return &MemoryStore{
-		users: make(map[string]*backend.User),
+// New creates a new user.Manager
+func New(store Store) *Manager {
+	return &Manager{
+		store:  store,
+		mutex:  &sync.RWMutex{},
+		active: make(map[string]*backend.User),
 	}
 }
 
-func (m *MemoryStore) FindFromEmail(email string) (*backend.User, error) {
-	u, ok := m.users[email]
-	if !ok {
-		return nil, errors.New("not found")
-	}
+func (m *Manager) AddActive(user *backend.User) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 
-	return u, nil
+	m.active[user.ID] = user
 }
 
-func (m *MemoryStore) Create(email, username, password string) (*backend.User, error) {
-	_, ok := m.users[email]
-	if ok {
-		return nil, errors.New("already exists")
+func (m *Manager) RemoveActive(id string) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	delete(m.active, id)
+}
+
+func (m *Manager) ListActive() []*backend.User {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	var users []*backend.User
+	for _, u := range m.active {
+		users = append(users, u)
 	}
 
-	u := &backend.User{
-		Email:    email,
-		Name:     username,
-		Password: password,
-	}
-	m.users[email] = u
+	return users
+}
 
-	return u, nil
+func (m *Manager) Find(id string) (*backend.User, error) {
+	return m.store.Find(id)
+}
+
+func (m *Manager) FindByName(name string) (*backend.User, error) {
+	return m.store.FindByName(name)
 }

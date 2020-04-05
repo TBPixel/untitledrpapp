@@ -10,7 +10,7 @@ function History({ messages, participants }) {
   const [listHeight, setListHeight] = useState(0)
 
   const sizeMap = useRef({})
-  const getSize = useCallback(index => sizeMap.current[index] || 60, [])
+  const getSize = useCallback((index) => sizeMap.current[index] || 60, [])
   const setSize = useCallback((index, size) => {
     sizeMap.current = { ...sizeMap.current, [index]: size }
     const list = listRef.current
@@ -42,7 +42,7 @@ function History({ messages, participants }) {
               body={messages[index].body}
               sentAt={messages[index].sentAt}
               setSize={setSize}
-              participant={participants[messages[index].participant]}
+              participant={messages[index].participant}
             />
           </div>
         )}
@@ -51,16 +51,17 @@ function History({ messages, participants }) {
   )
 }
 
+const participant = PropTypes.shape({
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  picture: PropTypes.string.isRequired,
+})
+
 const message = PropTypes.shape({
   id: PropTypes.number.isRequired,
   body: PropTypes.string.isRequired,
-  participant: PropTypes.number.isRequired,
+  participant: participant.isRequired,
   sentAt: PropTypes.instanceOf(Date),
-})
-
-const participant = PropTypes.shape({
-  id: PropTypes.number.isRequired,
-  name: PropTypes.string.isRequired,
 })
 
 History.propTypes = {

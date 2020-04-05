@@ -6,3 +6,8 @@ type User struct {
 	Name     string
 	Password string
 }
+
+type Chat struct {
+	ID             string
+	ParticipantIDs []string
+}

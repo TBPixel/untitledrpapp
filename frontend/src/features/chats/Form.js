@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import PropTypes from 'prop-types'
 import { useDispatch, useSelector } from 'react-redux'
 import { MdSend } from 'react-icons/md'
@@ -7,28 +7,41 @@ import * as chats from 'features/chats/store'
 import * as forms from 'components/forms'
 import Button from 'components/Button'
 
-function Form({ name, conversationID }) {
+function Form({ name, conversationID, sender, mini, picture, participants }) {
   const dispatch = useDispatch()
   const user = useSelector(auth.SelectUser)
-
   const [message, setMessage] = useState('')
-  const onSubmit = e => {
+  const send = useCallback(() => {
+    const users = participants.map((u) => ({
+      id: u.id,
+      username: u.name,
+      picture: u.picture,
+    }))
+
+    sender(
+      JSON.stringify({
+        chat: {
+          id: conversationID,
+          participants: users,
+        },
+        user_id: user.id,
+        body: message,
+      })
+    )
+  }, [conversationID, user.id, message, sender, participants])
+  const onSubmit = (e) => {
     e.preventDefault()
 
     if (!message) {
       return
     }
 
-    console.log({
-      conversationID,
-      participantID: user.id,
-      body: message,
-    })
+    send()
 
     dispatch(
       chats.PushMessage({
         conversationID,
-        participantID: user.id,
+        participant: user,
         body: message,
       })
     )
@@ -54,7 +67,8 @@ function Form({ name, conversationID }) {
 
 Form.propTypes = {
   name: PropTypes.string.isRequired,
-  conversationID: PropTypes.number.isRequired,
+  conversationID: PropTypes.string.isRequired,
+  sender: PropTypes.func.isRequired,
 }
 
 export default Form

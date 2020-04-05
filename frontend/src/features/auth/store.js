@@ -4,26 +4,26 @@ export const slice = createSlice({
   name: 'auth',
   initialState: {
     user: {
-      id: 0,
-      name: 'You',
-      picture: 'https://placekitten.com/64/64',
+      id: '',
+      name: '',
+      picture: '',
       mini: '',
     },
   },
   reducers: {
     Login: (state, action) => {
-      const { id, name, picture, mini } = action.payload
+      const { id, name } = action.payload
 
       state.user = {
         id,
         name,
-        picture,
-        mini,
+        picture: '',
+        mini: '',
       }
     },
-    Logout: state => {
+    Logout: (state) => {
       state.user = {
-        id: -1,
+        id: '',
         name: '',
         picture: '',
         mini: '',
@@ -34,8 +34,8 @@ export const slice = createSlice({
 
 export const { Login, Logout } = slice.actions
 
-export const SelectUser = state => {
-  if (state.auth.user.id === -1) {
+export const SelectUser = (state) => {
+  if (state.auth.user.id === '') {
     return null
   }
 

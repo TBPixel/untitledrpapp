@@ -1,7 +1,9 @@
 import React from 'react'
 import { Switch, Route } from 'react-router-dom'
+import PrivateRoute from 'components/PrivateRoute'
 import App from 'components/App'
-import AuthPage from 'features/auth/AuthPage'
+import Home from 'components/Home'
+import AuthChrome from 'features/auth/AuthChrome'
 import Login from 'features/auth/Login'
 import Register from 'features/auth/Register'
 import PasswordReset from 'features/auth/PasswordReset'
@@ -10,24 +12,30 @@ import Settings from 'features/settings/Settings'
 function Routes() {
   return (
     <Switch>
-      <Route exact path="/" component={App} />
-      <Route path="/settings" component={Settings} />
+      <Route exact path="/" component={Home} />
 
       <Route path="/login">
-        <AuthPage>
+        <AuthChrome>
           <Login />
-        </AuthPage>
+        </AuthChrome>
       </Route>
       <Route path="/register">
-        <AuthPage>
+        <AuthChrome>
           <Register />
-        </AuthPage>
+        </AuthChrome>
       </Route>
       <Route path="/password-reset">
-        <AuthPage>
+        <AuthChrome>
           <PasswordReset />
-        </AuthPage>
+        </AuthChrome>
       </Route>
+
+      <PrivateRoute redirect="/login">
+        <Route path="/app" component={App} />
+      </PrivateRoute>
+      <PrivateRoute redirect="/login">
+        <Route path="/settings" component={Settings} />
+      </PrivateRoute>
     </Switch>
   )
 }
