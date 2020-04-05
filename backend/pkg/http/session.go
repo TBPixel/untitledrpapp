@@ -10,9 +10,10 @@ import (
 
 const SessionName = "sess"
 
-func NewSessionStore(key []byte, path string) sessions.Store {
+func NewSessionStore(key []byte, path, domain string) sessions.Store {
 	cs := sessions.NewFilesystemStore(path, key)
 	cs.Options = &sessions.Options{
+		Domain:   domain,
 		Path:     "/",
 		MaxAge:   86400 * 30,
 		HttpOnly: true,

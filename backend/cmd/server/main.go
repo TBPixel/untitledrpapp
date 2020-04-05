@@ -35,7 +35,7 @@ func main() {
 	auth := user.NewAuth(userStore)
 	chats := chat.NewManager(chat.NewMemoryStore())
 	users := user.New(userStore)
-	sessions := http.NewSessionStore([]byte(secret), os.TempDir())
+	sessions := http.NewSessionStore([]byte(secret), os.TempDir(), domain)
 	hub := http.NewHub(domain, users, ctx)
 	go hub.Listen()
 
