@@ -8,7 +8,7 @@ function Conversations() {
   const conversations = useSelector(chats.SelectChats)
 
   return (
-    <ul className="flex flex-col">
+    <ul className="flex flex-col overflow-x-hidden overflow-y-auto">
       {conversations.map((c) => (
         <li key={c.id} className="mb-1">
           <Conversation

@@ -6,7 +6,7 @@ import config from 'conf'
 import * as chats from 'features/chats/store'
 import MiniProfile from 'features/chats/MiniProfile'
 
-function ProfileButton({ id, name, picture, content }) {
+function ProfileButton({ id, name, picture, mini }) {
   const dispatch = useDispatch()
   const [request, response] = useFetch(config.api.host, {
     credentials: 'include',
@@ -24,14 +24,15 @@ function ProfileButton({ id, name, picture, content }) {
       id: u.id,
       name: u.username,
       picture: u.picture || '',
+      mini: u.mini || '',
     }))
 
     dispatch(chats.Create({ id: chat.chat_id, name, participants }))
   }
 
   return (
-    <button onClick={onClick} className="block w-full h-16">
-      <MiniProfile name={name} picture={picture} content={content} />
+    <button onClick={onClick} className="block w-full">
+      <MiniProfile name={name} picture={picture} mini={mini} />
     </button>
   )
 }
@@ -40,7 +41,7 @@ ProfileButton.propTypes = {
   id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   picture: PropTypes.string,
-  content: PropTypes.string,
+  mini: PropTypes.string,
 }
 
 export default ProfileButton

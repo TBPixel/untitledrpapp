@@ -31,7 +31,7 @@ export const slice = createSlice({
       state.open = index
     },
     Create: (state, action) => {
-      const { id, name, picture, content, participants } = action.payload
+      const { id, name, picture, mini, participants } = action.payload
       const index = state.windows.findIndex((w) => w.id === id)
       if (index !== -1) {
         state.open = index
@@ -44,7 +44,7 @@ export const slice = createSlice({
         name,
         picture,
         participants,
-        mini: content || '',
+        mini: mini || '',
       })
       state.open = length - 1
     },

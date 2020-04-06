@@ -24,7 +24,7 @@ function Discovery() {
           id={users[index].id}
           name={users[index].name}
           picture={users[index].picture}
-          content={users[index].content}
+          mini={users[index].mini}
         />
       </div>
     </div>
@@ -40,7 +40,7 @@ function Discovery() {
           width="100%"
           height={listHeight}
           itemCount={users.length}
-          itemSize={72}>
+          itemSize={5 * 16 + 8}>
           {Row}
         </List>
       </div>

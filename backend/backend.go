@@ -5,6 +5,8 @@ type User struct {
 	Email    string
 	Name     string
 	Password string
+	Mini     string
+	Picture  string
 }
 
 type Chat struct {

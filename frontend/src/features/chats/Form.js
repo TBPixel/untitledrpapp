@@ -7,28 +7,19 @@ import * as chats from 'features/chats/store'
 import * as forms from 'components/forms'
 import Button from 'components/Button'
 
-function Form({ name, conversationID, sender, mini, picture, participants }) {
+function Form({ name, conversationID, sender }) {
   const dispatch = useDispatch()
   const user = useSelector(auth.SelectUser)
   const [message, setMessage] = useState('')
   const send = useCallback(() => {
-    const users = participants.map((u) => ({
-      id: u.id,
-      username: u.name,
-      picture: u.picture,
-    }))
-
     sender(
       JSON.stringify({
-        chat: {
-          id: conversationID,
-          participants: users,
-        },
+        chat_id: conversationID,
         user_id: user.id,
         body: message,
       })
     )
-  }, [conversationID, user.id, message, sender, participants])
+  }, [conversationID, user.id, message, sender])
   const onSubmit = (e) => {
     e.preventDefault()
 
@@ -50,7 +41,7 @@ function Form({ name, conversationID, sender, mini, picture, participants }) {
   }
 
   return (
-    <form className="flex" onSubmit={onSubmit}>
+    <form className="flex items-end" onSubmit={onSubmit}>
       <forms.TextAreaInput
         value={message}
         setValue={setMessage}

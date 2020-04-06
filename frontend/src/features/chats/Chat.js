@@ -15,13 +15,11 @@ function Chat({ id, sender }) {
       return
     }
 
-    if (lastMessage.chat.id !== id) {
+    if (lastMessage.chat_id !== id) {
       return
     }
 
-    const sender = lastMessage.chat.participants.find(
-      (u) => u.id === lastMessage.user_id
-    )
+    const sender = chat.participants.find((u) => u.id === lastMessage.user_id)
 
     dispatch(
       chats.PushMessage({
@@ -38,25 +36,18 @@ function Chat({ id, sender }) {
         <div className="min-h-full box-content border-b-2 border-gray-200 overflow-y-scroll">
           <MiniProfile
             name={chat.name}
-            content={chat.mini}
+            mini={chat.mini}
             picture={chat.picture}
           />
         </div>
       </div>
 
-      <div className="flex-grow pb-4">
-        <History messages={chat.messages} participants={chat.participants} />
+      <div className="flex-shrink h-full pb-4">
+        <History messages={chat.messages} />
       </div>
 
       <div>
-        <Form
-          conversationID={id}
-          name={chat.name}
-          sender={sender}
-          mini={chat.mini}
-          picture={chat.picture}
-          participants={chat.participants}
-        />
+        <Form conversationID={id} name={chat.name} sender={sender} />
       </div>
     </div>
   )

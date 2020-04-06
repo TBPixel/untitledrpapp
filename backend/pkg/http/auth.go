@@ -10,21 +10,21 @@ import (
 
 type AuthManager interface {
 	Authenticate(email, password string) (*backend.User, error)
-	Register(email, username, password string) (*backend.User, error)
+	Register(email, name, password string) (*backend.User, error)
 }
 
 func (s *Server) handleRegister() http.HandlerFunc {
 	type request struct {
 		Email           string `json:"email" validate:"required,email"`
-		Username        string `json:"username" validate:"required"`
+		Name            string `json:"name" validate:"required"`
 		Password        string `json:"password" validate:"required,eqfield=ConfirmPassword"`
 		ConfirmPassword string `json:"confirm_password" validate:"required"`
 	}
 
 	type response struct {
-		ID       string `json:"id"`
-		Username string `json:"username"`
-		Email    string `json:"email"`
+		ID    string `json:"id"`
+		Name  string `json:"name"`
+		Email string `json:"email"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -56,10 +56,10 @@ func (s *Server) handleRegister() http.HandlerFunc {
 		//	return
 		//}
 
-		user, err := s.auth.Register(req.Email, req.Username, req.Password)
+		user, err := s.auth.Register(req.Email, req.Name, req.Password)
 		if err != nil {
 			log.Printf("error while trying to register user: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -70,9 +70,9 @@ func (s *Server) handleRegister() http.HandlerFunc {
 		}
 
 		err = json.NewEncoder(w).Encode(&response{
-			ID:       user.ID,
-			Username: user.Name,
-			Email:    user.Email,
+			ID:    user.ID,
+			Name:  user.Name,
+			Email: user.Email,
 		})
 		if err != nil {
 			log.Printf("error encoding a json response: %v", err)
@@ -89,9 +89,9 @@ func (s *Server) handleLogin() http.HandlerFunc {
 	}
 
 	type response struct {
-		ID       string `json:"id"`
-		Username string `json:"username"`
-		Email    string `json:"email"`
+		ID    string `json:"id"`
+		Name  string `json:"name"`
+		Email string `json:"email"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +126,7 @@ func (s *Server) handleLogin() http.HandlerFunc {
 		user, err := s.auth.Authenticate(req.Email, req.Password)
 		if err != nil {
 			log.Printf("error while trying to login user: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -137,9 +137,9 @@ func (s *Server) handleLogin() http.HandlerFunc {
 		}
 
 		err = json.NewEncoder(w).Encode(&response{
-			ID:       user.ID,
-			Username: user.Name,
-			Email:    user.Email,
+			ID:    user.ID,
+			Name:  user.Name,
+			Email: user.Email,
 		})
 		if err != nil {
 			log.Printf("error encoding a json response: %v", err)

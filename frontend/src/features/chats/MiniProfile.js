@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import ReactHtmlParser from 'react-html-parser'
+import { FaUserAlt } from 'react-icons/fa'
 
 const filterDangerousTags = (node) => {
   const tags = [
@@ -26,8 +27,8 @@ const filterDangerousTags = (node) => {
   return null
 }
 
-function MiniProfile({ name, picture, content }) {
-  const body = String(content).trim()
+function MiniProfile({ name, picture, mini }) {
+  const body = String(mini).trim()
   const hasBody = Boolean(body.length)
   const html = ReactHtmlParser(body, {
     transform: filterDangerousTags,
@@ -35,31 +36,42 @@ function MiniProfile({ name, picture, content }) {
   const render = html.length > 0 ? html : body
 
   return (
-    <div className="flex justify-start items-start">
+    <>
       {hasBody ? (
-        render
+        <div className="w-full h-20">
+          <div className="max-h-full">{render}</div>
+        </div>
       ) : (
-        <>
-          {picture ? (
-            <div className="block pr-3 rounded overflow-hidden">
-              <img
-                className="object-contain"
-                src={picture}
-                alt={`${name}'s profile`}
-              />
-            </div>
-          ) : null}
-          <span>{name}</span>
-        </>
+        <div className="flex justify-start items-start">
+          <div className="flex rounded overflow-hidden">
+            {picture ? (
+              <>
+                <img
+                  className="block w-20 h-20 pr-2 object-contain"
+                  src={picture}
+                  alt={`${name}'s profile`}
+                />
+                <span>{name}</span>
+              </>
+            ) : (
+              <>
+                <div className="pr-2">
+                  <FaUserAlt size={5 * 16} className="text-gray-500" />
+                </div>
+                <span>{name}</span>
+              </>
+            )}
+          </div>
+        </div>
       )}
-    </div>
+    </>
   )
 }
 
 MiniProfile.propTypes = {
   name: PropTypes.string.isRequired,
   picture: PropTypes.string,
-  content: PropTypes.string,
+  mini: PropTypes.string,
 }
 
 export default MiniProfile

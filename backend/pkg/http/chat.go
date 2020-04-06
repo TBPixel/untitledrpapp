@@ -5,20 +5,72 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi"
+
 	"github.com/tbpixel/rp-app/backend"
 )
 
 type ChatManager interface {
 	Find(ChatID string) (*backend.Chat, error)
+	FindByParticipants(UserIDs ...string) *backend.Chat
 	Create(UserIDs ...string) *backend.Chat
+}
+
+func (s *Server) handleFindChat() http.HandlerFunc {
+	type participant struct {
+		ID      string `json:"id"`
+		Name    string `json:"name"`
+		Picture string `json:"picture"`
+		Mini    string `json:"mini"`
+	}
+
+	type response struct {
+		ID           string        `json:"id"`
+		Participants []participant `json:"participants"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		chatID := chi.URLParam(r, "chatID")
+		chat, err := s.chat.Find(chatID)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+			return
+		}
+
+		var participants []participant
+		for _, id := range chat.ParticipantIDs {
+			u, err := s.user.Find(id)
+			if err != nil {
+				log.Printf("failed to lookup user %v for chat %v", id, chatID)
+				continue
+			}
+
+			participants = append(participants, participant{
+				ID:      u.ID,
+				Name:    u.Name,
+				Picture: u.Picture,
+				Mini:    u.Mini,
+			})
+		}
+
+		err = json.NewEncoder(w).Encode(&response{
+			ID:           chatID,
+			Participants: participants,
+		})
+		if err != nil {
+			log.Printf("error encoding a json response: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
 }
 
 func (s *Server) handleChatCreate() http.HandlerFunc {
 	type participant struct {
-		ID       string `json:"id"`
-		Username string `json:"username"`
-		Picture  string `json:"picture"`
-		Content  string `json:"content"`
+		ID      string `json:"id"`
+		Name    string `json:"name"`
+		Picture string `json:"picture"`
+		Mini    string `json:"mini"`
 	}
 
 	type request struct {
@@ -78,22 +130,26 @@ func (s *Server) handleChatCreate() http.HandlerFunc {
 
 			ids = append(ids, u.ID)
 			participants = append(participants, participant{
-				ID:       u.ID,
-				Username: u.Name,
-				Picture:  "",
-				Content:  "",
+				ID:      u.ID,
+				Name:    u.Name,
+				Picture: u.Picture,
+				Mini:    u.Mini,
 			})
 		}
 
-		c := s.chat.Create(ids...)
-		if err := s.hub.Create(c.ID, ids...); err != nil {
-			log.Printf("error while creating chat: %v", err)
-			w.WriteHeader(http.StatusBadRequest)
-			return
+		chat := s.chat.FindByParticipants(ids...)
+		if chat == nil {
+			chat = s.chat.Create(ids...)
+
+			if err := s.hub.Create(chat.ID, ids...); err != nil {
+				log.Printf("error while creating chat: %v", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 		}
 
 		err = json.NewEncoder(w).Encode(&response{
-			ChatID:       c.ID,
+			ChatID:       chat.ID,
 			Participants: participants,
 		})
 		if err != nil {

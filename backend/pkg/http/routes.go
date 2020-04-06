@@ -37,6 +37,7 @@ func (s *Server) route() http.Handler {
 		r.With(s.authGuard).Get("/logout", s.handleLogout())
 
 		r.With(s.authGuard).Post("/chats", s.handleChatCreate())
+		r.With(s.authGuard).Get("/chats/{chatID}", s.handleFindChat())
 
 		r.With(s.authGuard).Get("/me", s.handleMe())
 		r.With(s.authGuard).Get("/active", s.handleActiveUsers())
