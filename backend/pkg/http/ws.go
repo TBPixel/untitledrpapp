@@ -73,10 +73,8 @@ type move struct {
 }
 
 type participant struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Picture  string `json:"picture"`
-	Mini     string `json:"mini"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type chat struct {
@@ -131,6 +129,7 @@ func (h *Hub) Listen() {
 				continue
 			}
 
+			h.user.RemoveActive(client.user.ID)
 			delete(h.clients, client.user.ID)
 			close(client.read)
 		case join := <-h.join:

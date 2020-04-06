@@ -10,7 +10,7 @@ type Store interface {
 	Find(id string) (*backend.User, error)
 	FindByEmail(email string) (*backend.User, error)
 	FindByName(name string) (*backend.User, error)
-	Create(email, username, password string) (*backend.User, error)
+	Create(email, name, password string) (*backend.User, error)
 }
 
 // Manager provides full CRUD access to managing users

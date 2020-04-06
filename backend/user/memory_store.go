@@ -66,7 +66,7 @@ func (m *MemoryStore) FindByName(name string) (*backend.User, error) {
 	return m.Find(id)
 }
 
-func (m *MemoryStore) Create(email, username, password string) (*backend.User, error) {
+func (m *MemoryStore) Create(email, name, password string) (*backend.User, error) {
 	if u, _ := m.FindByEmail(email); u != nil {
 		return nil, errors.New("already exists")
 	}
@@ -75,7 +75,7 @@ func (m *MemoryStore) Create(email, username, password string) (*backend.User, e
 	u := &backend.User{
 		ID:       id,
 		Email:    email,
-		Name:     username,
+		Name:     name,
 		Password: password,
 	}
 
@@ -89,7 +89,7 @@ func (m *MemoryStore) Create(email, username, password string) (*backend.User, e
 
 	m.nameMutex.Lock()
 	defer m.nameMutex.Unlock()
-	m.nameIndex[username] = id
+	m.nameIndex[name] = id
 
 	return u, nil
 }

@@ -31,14 +31,14 @@ func (a Auth) Authenticate(email, password string) (*backend.User, error) {
 	return u, nil
 }
 
-func (a Auth) Register(email, username, password string) (*backend.User, error) {
+func (a Auth) Register(email, name, password string) (*backend.User, error) {
 	p, err := hash.Password(password)
 	if err != nil {
 		log.Printf("error while attempting to hash password: %v", err)
 		return nil, fmt.Errorf("failed to secure given password")
 	}
 
-	u, err := a.store.Create(email, username, p)
+	u, err := a.store.Create(email, name, p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register new user: %v", err)
 	}

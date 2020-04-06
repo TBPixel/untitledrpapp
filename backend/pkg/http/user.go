@@ -18,9 +18,9 @@ type UserManager interface {
 
 func (s *Server) handleMe() http.HandlerFunc {
 	type response struct {
-		ID       string `json:"id"`
-		Username string `json:"username"`
-		Email    string `json:"email"`
+		ID    string `json:"id"`
+		Name  string `json:"name"`
+		Email string `json:"email"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -33,9 +33,9 @@ func (s *Server) handleMe() http.HandlerFunc {
 		user := session.Values["auth"].(*backend.User)
 
 		err = json.NewEncoder(w).Encode(&response{
-			ID:       user.ID,
-			Username: user.Name,
-			Email:    user.Email,
+			ID:    user.ID,
+			Name:  user.Name,
+			Email: user.Email,
 		})
 		if err != nil {
 			log.Printf("error encoding a json response: %v", err)
@@ -47,8 +47,10 @@ func (s *Server) handleMe() http.HandlerFunc {
 
 func (s *Server) handleActiveUsers() http.HandlerFunc {
 	type user struct {
-		ID       string `json:"id"`
-		Username string `json:"username"`
+		ID      string `json:"id"`
+		Name    string `json:"name"`
+		Picture string `json:"picture"`
+		Mini    string `json:"mini"`
 	}
 
 	type response struct {
@@ -60,8 +62,10 @@ func (s *Server) handleActiveUsers() http.HandlerFunc {
 		users := s.user.ListActive()
 		for _, u := range users {
 			active = append(active, user{
-				ID:       u.ID,
-				Username: u.Name,
+				ID:      u.ID,
+				Name:    u.Name,
+				Picture: u.Picture,
+				Mini:    u.Mini,
 			})
 		}
 
