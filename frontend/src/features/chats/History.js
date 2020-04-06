@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { VariableSizeList as List } from 'react-window'
 import Message from 'features/chats/Message'
 
-function History({ messages, participants }) {
+function History({ messages }) {
   const chatHistoryRef = useRef()
   const listRef = useRef()
 
@@ -24,7 +24,7 @@ function History({ messages, participants }) {
     if (chatHistory) {
       setListHeight(chatHistory.offsetHeight)
     }
-  }, [])
+  })
 
   return (
     <div ref={chatHistoryRef} className="h-full">
@@ -66,7 +66,6 @@ const message = PropTypes.shape({
 
 History.propTypes = {
   messages: PropTypes.arrayOf(message).isRequired,
-  participants: PropTypes.arrayOf(participant).isRequired,
 }
 
 export default History

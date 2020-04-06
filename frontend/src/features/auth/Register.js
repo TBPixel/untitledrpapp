@@ -16,7 +16,7 @@ function Register() {
   })
   const [input, onInputChange] = useInputChange({
     email: '',
-    username: '',
+    name: '',
     password: '',
     password_confirmation: '',
   })
@@ -33,7 +33,7 @@ function Register() {
     dispatch(
       auth.Login({
         id: user.id,
-        name: user.username,
+        name: user.name,
       })
     )
   }
@@ -61,8 +61,8 @@ function Register() {
 
           <div className="mb-6">
             <forms.TextInput
-              name="username"
-              value={input.username}
+              name="name"
+              value={input.name}
               setValue={onInputChange}
               placeholder="Foobar"
               disabled={request.loading}

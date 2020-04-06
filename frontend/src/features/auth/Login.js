@@ -29,7 +29,7 @@ function Login() {
     dispatch(
       auth.Login({
         id: user.id,
-        name: user.username,
+        name: user.name,
       })
     )
   }

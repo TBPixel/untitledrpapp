@@ -1,5 +1,4 @@
 import React from 'react'
-import useFetch from 'use-http'
 import { useDispatch } from 'react-redux'
 import { MdSearch } from 'react-icons/md'
 import config from 'conf'
@@ -10,24 +9,24 @@ import Button from 'components/Button'
 
 function Form() {
   const dispatch = useDispatch()
-  const [request, response] = useFetch(config.api.host, {
-    credentials: 'include',
-  })
   const [input, onInputChange] = useInputChange({
     query: '',
   })
   const onSearch = async (e) => {
     e.preventDefault()
 
-    const data = await request.get('/api/active')
-    if (!response.ok) {
+    const res = await fetch(`${config.api.host}/api/active`, {
+      credentials: 'include',
+    })
+    if (res.status !== 200) {
       return
     }
+    const data = await res.json()
     const users = data.users.map((u) => ({
       id: u.id,
-      name: u.username,
+      name: u.name,
       picture: u.picture || '',
-      content: u.content || '',
+      mini: u.mini || '',
     }))
 
     dispatch(discovery.Empty())
@@ -43,14 +42,13 @@ function Form() {
           setValue={onInputChange}
           placeholder="Search"
           hideLabel
-          className="border-gray-400"
-          disabled={request.loading}>
+          className="border-gray-400">
           Search
         </forms.TextInput>
       </div>
 
       <div>
-        <Button type="submit" disabled={request.loading}>
+        <Button type="submit">
           <MdSearch size={20} />
         </Button>
       </div>
