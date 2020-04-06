@@ -12,6 +12,7 @@ import (
 
 type ChatManager interface {
 	Find(ChatID string) (*backend.Chat, error)
+	FindByParticipants(UserIDs ...string) *backend.Chat
 	Create(UserIDs ...string) *backend.Chat
 }
 
@@ -24,7 +25,7 @@ func (s *Server) handleFindChat() http.HandlerFunc {
 	}
 
 	type response struct {
-		ChatID       string        `json:"chat_id"`
+		ID           string        `json:"id"`
 		Participants []participant `json:"participants"`
 	}
 
@@ -53,7 +54,7 @@ func (s *Server) handleFindChat() http.HandlerFunc {
 		}
 
 		err = json.NewEncoder(w).Encode(&response{
-			ChatID:       chatID,
+			ID:           chatID,
 			Participants: participants,
 		})
 		if err != nil {
@@ -136,15 +137,19 @@ func (s *Server) handleChatCreate() http.HandlerFunc {
 			})
 		}
 
-		c := s.chat.Create(ids...)
-		if err := s.hub.Create(c.ID, ids...); err != nil {
-			log.Printf("error while creating chat: %v", err)
-			w.WriteHeader(http.StatusBadRequest)
-			return
+		chat := s.chat.FindByParticipants(ids...)
+		if chat == nil {
+			chat = s.chat.Create(ids...)
+
+			if err := s.hub.Create(chat.ID, ids...); err != nil {
+				log.Printf("error while creating chat: %v", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 		}
 
 		err = json.NewEncoder(w).Encode(&response{
-			ChatID:       c.ID,
+			ChatID:       chat.ID,
 			Participants: participants,
 		})
 		if err != nil {

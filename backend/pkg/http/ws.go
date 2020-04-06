@@ -72,20 +72,10 @@ type move struct {
 	client *client
 }
 
-type participant struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type chat struct {
-	ID           string         `json:"id"`
-	Participants []*participant `json:"participants"`
-}
-
 type message struct {
+	ChatID string `json:"chat_id"`
 	UserID string `json:"user_id"`
 	Body   string `json:"body"`
-	Chat   *chat  `json:"chat"`
 }
 
 // NewHub returns a websocket connection hub for broadcasting
@@ -150,7 +140,7 @@ func (h *Hub) Listen() {
 				delete(h.groups, leave.chatID)
 			}
 		case message := <-h.broadcast:
-			group, ok := h.groups[message.Chat.ID]
+			group, ok := h.groups[message.ChatID]
 			if !ok {
 				continue
 			}
