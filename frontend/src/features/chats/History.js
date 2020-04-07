@@ -1,14 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import { VariableSizeList as List } from 'react-window'
 import Message from 'features/chats/Message'
 
-function History({ messages }) {
+function History({ messages, textareaHeight }) {
   const chatHistoryRef = useRef()
   const listRef = useRef()
-
   const [listHeight, setListHeight] = useState(0)
-
   const sizeMap = useRef({})
   const getSize = useCallback((index) => sizeMap.current[index] || 60, [])
   const setSize = useCallback((index, size) => {
@@ -19,12 +17,12 @@ function History({ messages }) {
     }
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const chatHistory = chatHistoryRef.current
     if (chatHistory) {
-      setListHeight(chatHistory.offsetHeight)
+      setListHeight(chatHistory.offsetHeight - textareaHeight)
     }
-  }, [])
+  }, [textareaHeight])
 
   return (
     <div ref={chatHistoryRef} className="h-full">
