@@ -81,13 +81,7 @@ func (s *Server) handleChatCreate() http.HandlerFunc {
 		//	return
 		//}
 
-		session, err := s.sessions.Get(r, SessionName)
-		if err != nil {
-			// no return since error is non-fatal
-			log.Printf("error while decoding session: %v", err)
-		}
-
-		user := session.Values["auth"].(*backend.User)
+		user := r.Context().Value(backend.User{}).(backend.User)
 		ids := append(req.Participants, user.ID)
 		for _, id := range ids {
 			_, err := s.user.Find(id)

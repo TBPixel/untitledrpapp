@@ -312,14 +312,8 @@ func (c *client) Receiving() {
 }
 
 func (s *Server) handleWebsocketConnect(w http.ResponseWriter, r *http.Request) {
-	session, err := s.sessions.Get(r, SessionName)
-	if err != nil {
-		// no return since error is non-fatal
-		log.Printf("error while decoding session: %v", err)
-	}
-
-	user := session.Values["auth"].(*backend.User)
-	client, err := s.hub.Upgrade(user, w, r)
+	user := r.Context().Value(backend.User{}).(backend.User)
+	client, err := s.hub.Upgrade(&user, w, r)
 	if err != nil {
 		log.Println(err)
 		return

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -22,9 +23,11 @@ func (s *Server) handleRegister() http.HandlerFunc {
 	}
 
 	type response struct {
-		ID    string `json:"id"`
-		Name  string `json:"name"`
-		Email string `json:"email"`
+		ID      string `json:"id"`
+		Name    string `json:"name"`
+		Email   string `json:"email"`
+		Mini    string `json:"mini"`
+		Picture string `json:"picture"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -63,16 +66,18 @@ func (s *Server) handleRegister() http.HandlerFunc {
 			return
 		}
 
-		if err := s.createUserSession(user, w, r); err != nil {
+		if err := s.createUserSession(user.ID, w, r); err != nil {
 			log.Printf("error while saving user to session: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		err = json.NewEncoder(w).Encode(&response{
-			ID:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
+			ID:      user.ID,
+			Name:    user.Name,
+			Email:   user.Email,
+			Mini:    user.Mini,
+			Picture: user.Picture,
 		})
 		if err != nil {
 			log.Printf("error encoding a json response: %v", err)
@@ -89,9 +94,11 @@ func (s *Server) handleLogin() http.HandlerFunc {
 	}
 
 	type response struct {
-		ID    string `json:"id"`
-		Name  string `json:"name"`
-		Email string `json:"email"`
+		ID      string `json:"id"`
+		Name    string `json:"name"`
+		Email   string `json:"email"`
+		Mini    string `json:"mini"`
+		Picture string `json:"picture"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -130,16 +137,18 @@ func (s *Server) handleLogin() http.HandlerFunc {
 			return
 		}
 
-		if err := s.createUserSession(user, w, r); err != nil {
+		if err := s.createUserSession(user.ID, w, r); err != nil {
 			log.Printf("error while saving user to session: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		err = json.NewEncoder(w).Encode(&response{
-			ID:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
+			ID:      user.ID,
+			Name:    user.Name,
+			Email:   user.Email,
+			Mini:    user.Mini,
+			Picture: user.Picture,
 		})
 		if err != nil {
 			log.Printf("error encoding a json response: %v", err)
@@ -161,19 +170,16 @@ func (s *Server) handleLogout() http.HandlerFunc {
 		err = session.Save(r, w)
 		if err != nil {
 			log.Printf("error while deleting auth session: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
 		}
-
 	}
 }
 
-func (s *Server) createUserSession(user *backend.User, w http.ResponseWriter, r *http.Request) error {
+func (s *Server) createUserSession(id string, w http.ResponseWriter, r *http.Request) error {
 	session, err := s.sessions.Get(r, SessionName)
 	if err != nil {
 		log.Printf("error while decoding session: %v", err)
 	}
-	session.Values["auth"] = user
+	session.Values["user_id"] = id
 
 	return session.Save(r, w)
 }
@@ -186,13 +192,27 @@ func (s *Server) authGuard(handler http.Handler) http.Handler {
 			log.Printf("error while decoding session: %v", err)
 		}
 
-		_, ok := session.Values["auth"].(*backend.User)
+		id, ok := session.Values["user_id"].(string)
 		if !ok {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
-		handler.ServeHTTP(w, r)
+		u, err := s.user.Find(id)
+		if err != nil {
+			session.Options.MaxAge = -1
+			err = session.Save(r, w)
+			if err != nil {
+				log.Printf("failed to invalid session for unknown user %v: %v", id, err)
+			}
+
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, backend.User{}, *u)
+		handler.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -204,7 +224,7 @@ func (s *Server) guestGuard(handler http.Handler) http.Handler {
 			log.Printf("error while decoding session: %v", err)
 		}
 
-		_, ok := session.Values["auth"].(*backend.User)
+		_, ok := session.Values["user_id"].(string)
 		if ok {
 			w.WriteHeader(http.StatusBadRequest)
 			return
