@@ -4,7 +4,10 @@ import Chrome from 'components/Chrome'
 function Home() {
   return (
     <Chrome>
-      <div className="min-h-screen">Home</div>
+      <p>
+        UntitledRP.app is a place for roleplayers to meet and express
+        themselves.
+      </p>
     </Chrome>
   )
 }

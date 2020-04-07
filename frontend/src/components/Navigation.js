@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
+import config from 'conf'
 import * as auth from 'features/auth/store'
 
 const NavItem = ({ children }) => (
@@ -12,7 +13,11 @@ const NavItem = ({ children }) => (
 function Navigation() {
   const user = useSelector(auth.SelectUser)
   const dispatch = useDispatch()
-  const onLogout = () => dispatch(auth.Logout())
+  const onLogout = async () => {
+    dispatch(auth.Logout())
+
+    await fetch(`${config.api.host}/api/logout`, { credentials: 'include' })
+  }
 
   return (
     <ul className="flex sm:justify-end">

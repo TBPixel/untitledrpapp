@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Navigation from 'components/Navigation'
 
 const Header = () => (
-  <header className="flex flex-wrap sm:flex-no-wrap pl-4 pr-2 py-4">
+  <header className="px-4 py-4 flex flex-wrap sm:flex-no-wrap">
     <h1 className="sm:w-1/2 text-gray-600 font-bold">
       <Link to="/">
         <span className="inline-block mr-1">UntitledRP.app</span>

@@ -21,24 +21,21 @@ type UserManager interface {
 
 func (s *Server) handleMe() http.HandlerFunc {
 	type response struct {
-		ID    string `json:"id"`
-		Name  string `json:"name"`
-		Email string `json:"email"`
+		ID      string `json:"id"`
+		Name    string `json:"name"`
+		Email   string `json:"email"`
+		Mini    string `json:"mini"`
+		Picture string `json:"picture"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		session, err := s.sessions.Get(r, SessionName)
-		if err != nil {
-			// no return since error is non-fatal
-			log.Printf("error while decoding session: %v", err)
-		}
-
-		user := session.Values["auth"].(*backend.User)
-
-		err = json.NewEncoder(w).Encode(&response{
-			ID:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
+		user := r.Context().Value(backend.User{}).(backend.User)
+		err := json.NewEncoder(w).Encode(&response{
+			ID:      user.ID,
+			Name:    user.Name,
+			Email:   user.Email,
+			Mini:    user.Mini,
+			Picture: user.Picture,
 		})
 		if err != nil {
 			log.Printf("error encoding a json response: %v", err)
@@ -66,9 +63,11 @@ func (s *Server) handleFindUser() http.HandlerFunc {
 		}
 
 		err = json.NewEncoder(w).Encode(&response{
-			ID:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
+			ID:      user.ID,
+			Name:    user.Name,
+			Email:   user.Email,
+			Mini:    user.Mini,
+			Picture: user.Picture,
 		})
 		if err != nil {
 			log.Printf("error encoding a json response: %v", err)

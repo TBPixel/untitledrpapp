@@ -27,14 +27,12 @@ function Root() {
     }
 
     checkAuth()
+    // ignored since we just wanna check if
+    // the user is logged in on the first load
     // eslint-disable-next-line
   }, [])
 
-  return (
-    <div className="bg-gray-200">
-      <Routes />
-    </div>
-  )
+  return <Routes />
 }
 
 export default Root

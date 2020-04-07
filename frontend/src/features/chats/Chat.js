@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { useDispatch, useSelector } from 'react-redux'
 import * as chats from 'features/chats/store'
@@ -8,6 +8,8 @@ import MiniProfile from 'features/chats/MiniProfile'
 
 function Chat({ id, sender }) {
   const dispatch = useDispatch()
+  const textareaRef = useRef()
+  const [textareaHeight, setTextareaHeight] = useState(0)
   const chat = useSelector(chats.SelectChatByID(id))
   const lastMessage = useSelector(chats.SelectLastMessage)
   useEffect(() => {
@@ -30,6 +32,13 @@ function Chat({ id, sender }) {
     )
   }, [lastMessage, id, dispatch, chat.participants])
 
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current
+    if (textarea) {
+      setTextareaHeight(textarea.offsetHeight)
+    }
+  }, [textareaRef])
+
   return (
     <div className="flex flex-col h-full">
       <div className="h-20">
@@ -42,11 +51,11 @@ function Chat({ id, sender }) {
         </div>
       </div>
 
-      <div className="flex-shrink h-full pb-4">
-        <History messages={chat.messages} />
+      <div className="flex-grow h-full pb-4">
+        <History messages={chat.messages} textareaHeight={textareaHeight} />
       </div>
 
-      <div>
+      <div className="flex-grow" ref={textareaRef}>
         <Form conversationID={id} name={chat.name} sender={sender} />
       </div>
     </div>

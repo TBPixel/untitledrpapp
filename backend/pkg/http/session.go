@@ -16,11 +16,11 @@ func NewSessionStore(key []byte, path, domain string) sessions.Store {
 		Path:     "/",
 		MaxAge:   86400 * 30,
 		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
 	}
 	if domain != "localhost" {
 		cs.Options.Domain = domain
 		cs.Options.Secure = true
-		cs.Options.SameSite = http.SameSiteNoneMode
 	}
 
 	gob.Register(&backend.User{})
