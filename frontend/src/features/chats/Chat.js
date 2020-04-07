@@ -28,7 +28,7 @@ function Chat({ id, sender }) {
         body: lastMessage.body,
       })
     )
-  }, [lastMessage, id, dispatch])
+  }, [lastMessage, id, dispatch, chat.participants])
 
   return (
     <div className="flex flex-col h-full">

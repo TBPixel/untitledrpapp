@@ -24,7 +24,7 @@ function History({ messages }) {
     if (chatHistory) {
       setListHeight(chatHistory.offsetHeight)
     }
-  })
+  }, [])
 
   return (
     <div ref={chatHistoryRef} className="h-full">

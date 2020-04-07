@@ -27,6 +27,7 @@ function Root() {
     }
 
     checkAuth()
+    // eslint-disable-next-line
   }, [])
 
   return (
