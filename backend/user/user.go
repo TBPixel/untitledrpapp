@@ -10,6 +10,7 @@ type Store interface {
 	Find(id string) (*backend.User, error)
 	FindByEmail(email string) (*backend.User, error)
 	FindByName(name string) (*backend.User, error)
+	Update(user *backend.User) error
 	Create(email, name, password string) (*backend.User, error)
 }
 
@@ -61,4 +62,16 @@ func (m *Manager) Find(id string) (*backend.User, error) {
 
 func (m *Manager) FindByName(name string) (*backend.User, error) {
 	return m.store.FindByName(name)
+}
+
+func (m *Manager) Update(id string, user *backend.User) error {
+	u, err := m.store.Find(id)
+	if err != nil {
+		return err
+	}
+
+	u.Mini = user.Mini
+	u.Picture = user.Picture
+
+	return m.store.Update(u)
 }

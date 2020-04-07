@@ -39,8 +39,10 @@ func (s *Server) route() http.Handler {
 		r.With(s.authGuard).Post("/chats", s.handleChatCreate())
 		r.With(s.authGuard).Get("/chats/{chatID}", s.handleFindChat())
 
-		r.With(s.authGuard).Get("/me", s.handleMe())
+		r.With(s.authGuard).Get("/me", s.handleFindUser())
 		r.With(s.authGuard).Get("/active", s.handleActiveUsers())
+		r.With(s.authGuard).Get("/users/{userID}", s.handleFindUser())
+		r.With(s.authGuard).Put("/users/{userID}", s.handleUpdateUser())
 	})
 
 	return r
