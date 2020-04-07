@@ -157,7 +157,6 @@ func (s *Server) handleLogout() http.HandlerFunc {
 			log.Printf("error while decoding session: %v", err)
 		}
 
-		delete(session.Values, "auth")
 		session.Options.MaxAge = -1
 		err = session.Save(r, w)
 		if err != nil {
