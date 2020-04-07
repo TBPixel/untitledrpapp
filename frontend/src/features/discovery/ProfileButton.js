@@ -1,9 +1,11 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import useFetch from 'use-http'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import config from 'conf'
+import * as auth from 'features/auth/store'
 import * as chats from 'features/chats/store'
+import { fetchUser } from 'features/auth/helpers'
 import MiniProfile from 'features/chats/MiniProfile'
 
 function ProfileButton({ id, name, picture, mini }) {
@@ -11,6 +13,7 @@ function ProfileButton({ id, name, picture, mini }) {
   const [request, response] = useFetch(config.api.host, {
     credentials: 'include',
   })
+  const user = useSelector(auth.SelectUser)
 
   const onClick = async () => {
     const chat = await request.post('/api/chats', {
@@ -20,12 +23,18 @@ function ProfileButton({ id, name, picture, mini }) {
       return
     }
 
-    const participants = chat.participants.map((u) => ({
-      id: u.id,
-      name: u.username,
-      picture: u.picture || '',
-      mini: u.mini || '',
-    }))
+    const withoutYou = chat.participants.filter((uid) => uid !== user.id)
+    const participants = await Promise.all(
+      withoutYou.map(async (uid) => {
+        const u = await fetchUser(uid)
+
+        return {
+          id: u.id,
+          name: u.name,
+          picture: u.picture,
+        }
+      })
+    )
 
     dispatch(chats.Create({ id: chat.chat_id, name, participants }))
   }

@@ -17,16 +17,9 @@ type ChatManager interface {
 }
 
 func (s *Server) handleFindChat() http.HandlerFunc {
-	type participant struct {
-		ID      string `json:"id"`
-		Name    string `json:"name"`
-		Picture string `json:"picture"`
-		Mini    string `json:"mini"`
-	}
-
 	type response struct {
-		ID           string        `json:"id"`
-		Participants []participant `json:"participants"`
+		ID           string   `json:"id"`
+		Participants []string `json:"participants"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -37,25 +30,9 @@ func (s *Server) handleFindChat() http.HandlerFunc {
 			return
 		}
 
-		var participants []participant
-		for _, id := range chat.ParticipantIDs {
-			u, err := s.user.Find(id)
-			if err != nil {
-				log.Printf("failed to lookup user %v for chat %v", id, chatID)
-				continue
-			}
-
-			participants = append(participants, participant{
-				ID:      u.ID,
-				Name:    u.Name,
-				Picture: u.Picture,
-				Mini:    u.Mini,
-			})
-		}
-
 		err = json.NewEncoder(w).Encode(&response{
-			ID:           chatID,
-			Participants: participants,
+			ID:           chat.ID,
+			Participants: chat.ParticipantIDs,
 		})
 		if err != nil {
 			log.Printf("error encoding a json response: %v", err)
@@ -66,20 +43,13 @@ func (s *Server) handleFindChat() http.HandlerFunc {
 }
 
 func (s *Server) handleChatCreate() http.HandlerFunc {
-	type participant struct {
-		ID      string `json:"id"`
-		Name    string `json:"name"`
-		Picture string `json:"picture"`
-		Mini    string `json:"mini"`
-	}
-
 	type request struct {
 		Participants []string `json:"participants"`
 	}
 
 	type response struct {
-		ChatID       string        `json:"chat_id"`
-		Participants []participant `json:"participants"`
+		ChatID       string   `json:"chat_id"`
+		Participants []string `json:"participants"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -119,38 +89,27 @@ func (s *Server) handleChatCreate() http.HandlerFunc {
 
 		user := session.Values["auth"].(*backend.User)
 		ids := append(req.Participants, user.ID)
-		var participants []participant
 		for _, id := range ids {
-			u, err := s.user.Find(id)
+			_, err := s.user.Find(id)
 			if err != nil {
 				log.Printf("cannot create chat with unknown user id %v", id)
-				w.WriteHeader(http.StatusBadRequest)
+				http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 				return
 			}
-
-			ids = append(ids, u.ID)
-			participants = append(participants, participant{
-				ID:      u.ID,
-				Name:    u.Name,
-				Picture: u.Picture,
-				Mini:    u.Mini,
-			})
 		}
 
 		chat := s.chat.FindByParticipants(ids...)
 		if chat == nil {
 			chat = s.chat.Create(ids...)
 
-			if err := s.hub.Create(chat.ID, ids...); err != nil {
-				log.Printf("error while creating chat: %v", err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
+			// ignore error because it just means a chat group
+			// already exists, which is what the user wants
+			_ = s.hub.Create(chat.ID, ids...)
 		}
 
 		err = json.NewEncoder(w).Encode(&response{
 			ChatID:       chat.ID,
-			Participants: participants,
+			Participants: ids,
 		})
 		if err != nil {
 			log.Printf("error encoding a json response: %v", err)

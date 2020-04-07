@@ -2,14 +2,16 @@ import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Route, Switch } from 'react-router-dom'
 import useWebSocket from 'react-use-websocket'
+import * as auth from 'features/auth/store'
 import * as chats from 'features/chats/store'
+import { fetchUser } from 'features/auth/helpers'
 import config from 'conf'
 import App from 'components/App'
 import Settings from 'features/settings/Settings'
 import Conversations from 'features/chats/Conversations'
 import SettingsButton from 'features/settings/SettingsButton'
 
-const fetchChat = async (dispatch, { chat_id, user_id }) => {
+const fetchChat = async (dispatch, { chat_id, sender_id, user_id }) => {
   const res = await fetch(`${config.api.host}/api/chats/${chat_id}`, {
     credentials: 'include',
   })
@@ -19,12 +21,19 @@ const fetchChat = async (dispatch, { chat_id, user_id }) => {
   }
 
   const chat = await res.json()
-  const participants = chat.participants.map((u) => ({
-    id: u.id,
-    name: u.name,
-    picture: u.picture,
-  }))
-  const sender = participants.find((u) => u.id === user_id)
+  const withoutYou = chat.participants.filter((uid) => uid !== user_id)
+  const participants = await Promise.all(
+    withoutYou.map(async (uid) => {
+      const u = await fetchUser(uid)
+
+      return {
+        id: u.id,
+        name: u.name,
+        picture: u.picture,
+      }
+    })
+  )
+  const sender = participants.find((u) => u.id === sender_id)
 
   dispatch(
     chats.Create({
@@ -43,10 +52,11 @@ function AppConn() {
     config.api.websocket
   )
   const convos = useSelector(chats.SelectChats)
+  const user = useSelector(auth.SelectUser)
 
   useEffect(() => {
     dispatch(chats.SetSocketState({ readyState }))
-  }, [readyState])
+  }, [readyState, dispatch])
 
   useEffect(() => {
     if (!lastMessage || lastMessage === null) {
@@ -56,7 +66,7 @@ function AppConn() {
     const { chat_id, user_id, body } = JSON.parse(lastMessage.data)
     const exists = convos.find((c) => c.id === chat_id)
     if (!exists) {
-      fetchChat(dispatch, { chat_id, user_id })
+      fetchChat(dispatch, { chat_id, sender_id: user_id, user_id: user.id })
     }
 
     dispatch(
@@ -68,7 +78,7 @@ function AppConn() {
         },
       })
     )
-  }, [lastMessage])
+  }, [lastMessage, convos, user.id, dispatch])
 
   return (
     <div className="h-screen flex px-2 py-4">

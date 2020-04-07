@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/google/uuid"
@@ -92,4 +93,17 @@ func (m *MemoryStore) Create(email, name, password string) (*backend.User, error
 	m.nameIndex[name] = id
 
 	return u, nil
+}
+
+func (m *MemoryStore) Update(user *backend.User) error {
+	m.usersMutex.Lock()
+	defer m.usersMutex.Unlock()
+
+	if _, exists := m.users[user.ID]; !exists {
+		return fmt.Errorf("not found")
+	}
+
+	m.users[user.ID] = user
+
+	return nil
 }

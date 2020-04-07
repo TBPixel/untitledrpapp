@@ -18,10 +18,10 @@ export const useWindowSize = () => {
   return size
 }
 
-export const useInputChange = initialState => {
+export const useInputChange = (initialState) => {
   const [input, setInput] = useState(initialState)
 
-  const onInputChange = e =>
+  const onInputChange = (e) =>
     setInput({
       ...input,
       [e.currentTarget.name]: e.currentTarget.value,

@@ -184,7 +184,7 @@ func (h *Hub) Upgrade(user *backend.User, w http.ResponseWriter, r *http.Request
 //
 // Returns an error if the chat already exists
 func (h *Hub) Create(chatID string, userIDs ...string) error {
-	if _, exists := h.groups[chatID]; exists {
+	if h.Exists(chatID) {
 		return fmt.Errorf("chat with id %s already exists, try join instead", chatID)
 	}
 
@@ -202,6 +202,13 @@ func (h *Hub) Create(chatID string, userIDs ...string) error {
 	}
 
 	return nil
+}
+
+// Exists returns whether a specific chat exists by it's ID or not
+func (h *Hub) Exists(chatID string) bool {
+	_, exists := h.groups[chatID]
+
+	return exists
 }
 
 // Join adds a connected client to an existing listener
