@@ -91,6 +91,12 @@ func (s *Server) handleUpdateUser() http.HandlerFunc {
 			return
 		}
 
+		authUser := r.Context().Value(backend.User{}).(backend.User)
+		if authUser.ID != user.ID {
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			return
+		}
+
 		var req request
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
@@ -100,12 +106,8 @@ func (s *Server) handleUpdateUser() http.HandlerFunc {
 		}
 
 		err = s.user.Update(user.ID, &backend.User{
-			ID:       user.ID,
-			Email:    user.Email,
-			Name:     user.Name,
-			Password: user.Password,
-			Mini:     req.Mini,
-			Picture:  req.Picture,
+			Mini:    req.Mini,
+			Picture: req.Picture,
 		})
 		if err != nil {
 			log.Printf("error while updating user %v: %v", user.ID, err)
