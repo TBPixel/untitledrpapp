@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import useFetch from 'use-http'
+import { useHistory } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import config from 'conf'
 import * as auth from 'features/auth/store'
@@ -14,6 +15,7 @@ function ProfileButton({ id, name, picture, mini }) {
     credentials: 'include',
   })
   const user = useSelector(auth.SelectUser)
+  const history = useHistory()
 
   const onClick = async () => {
     const chat = await request.post('/api/chats', {
@@ -37,6 +39,8 @@ function ProfileButton({ id, name, picture, mini }) {
     )
 
     dispatch(chats.Create({ id: chat.chat_id, name, participants }))
+
+    history.replace('/app')
   }
 
   return (

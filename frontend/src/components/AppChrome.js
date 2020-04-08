@@ -7,9 +7,8 @@ import * as chats from 'features/chats/store'
 import { fetchUser } from 'features/auth/helpers'
 import config from 'conf'
 import App from 'components/App'
+import Sidebar from 'components/Sidebar'
 import Settings from 'features/settings/Settings'
-import Conversations from 'features/chats/Conversations'
-import SettingsButton from 'features/settings/SettingsButton'
 
 const fetchChat = async (dispatch, { chat_id, sender_id, user_id }) => {
   const res = await fetch(`${config.api.host}/api/chats/${chat_id}`, {
@@ -46,7 +45,7 @@ const fetchChat = async (dispatch, { chat_id, sender_id, user_id }) => {
   )
 }
 
-function AppConn() {
+function AppChrome() {
   const dispatch = useDispatch()
   const [sendMessage, lastMessage, readyState] = useWebSocket(
     config.api.websocket
@@ -81,15 +80,10 @@ function AppConn() {
   }, [lastMessage, convos, user.id, dispatch])
 
   return (
-    <div className="h-screen flex px-2 py-4">
-      <aside className="flex flex-col justify-between w-16 h-full">
-        <div className="flex-grow">
-          <Conversations />
-        </div>
-        <div className="h-16">
-          <SettingsButton />
-        </div>
-      </aside>
+    <div className="h-full flex pt-3 px-4 pb-4">
+      <div className="w-16 h-full">
+        <Sidebar />
+      </div>
       <Switch>
         <Route path="/app/settings" component={Settings} />
         <Route path="/app">
@@ -100,4 +94,4 @@ function AppConn() {
   )
 }
 
-export default AppConn
+export default AppChrome

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Switch, Route } from 'react-router-dom'
 import PrivateRoute from 'components/PrivateRoute'
-import AppConn from 'components/AppConn'
+import AppChrome from 'components/AppChrome'
 import Home from 'components/Home'
 import AuthChrome from 'features/auth/AuthChrome'
 import Login from 'features/auth/Login'
@@ -30,7 +30,7 @@ function Routes() {
       </Route>
 
       <PrivateRoute redirect="/login">
-        <Route path="/app" component={AppConn} />
+        <Route path="/app" component={AppChrome} />
       </PrivateRoute>
     </Switch>
   )

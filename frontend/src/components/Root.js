@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux'
 import useFetch from 'use-http'
 import config from 'conf'
 import * as auth from 'features/auth/store'
+import Chrome from 'components/Chrome'
 
 function Root() {
   const dispatch = useDispatch()
@@ -32,7 +33,11 @@ function Root() {
     // eslint-disable-next-line
   }, [])
 
-  return <Routes />
+  return (
+    <Chrome>
+      <Routes />
+    </Chrome>
+  )
 }
 
 export default Root

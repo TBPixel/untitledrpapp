@@ -30,6 +30,9 @@ function Login() {
       auth.Login({
         id: user.id,
         name: user.name,
+        email: user.email,
+        picture: user.picture,
+        mini: user.mini,
       })
     )
   }
@@ -41,7 +44,7 @@ function Login() {
   return (
     <div className="sm:max-w-xs">
       <Card className="p-8">
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} action={`${config.api.host}/api/login`}>
           <div className="mb-6">
             <forms.TextInput
               name="email"
