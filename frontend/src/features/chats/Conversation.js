@@ -1,13 +1,19 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { useDispatch } from 'react-redux'
+import { useHistory } from 'react-router-dom'
 import * as chats from 'features/chats/store'
 import Button from 'components/Button'
 import TooltipButton from 'components/TooltipButton'
 
 function Conversation({ id, name, picture, isFocussed }) {
   const dispatch = useDispatch()
-  const onOpen = () => dispatch(chats.Focus({ id }))
+  const history = useHistory()
+  const onOpen = () => {
+    dispatch(chats.Focus({ id }))
+
+    history.replace('/app')
+  }
 
   return (
     <div className="h-16">

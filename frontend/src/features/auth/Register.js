@@ -33,7 +33,10 @@ function Register() {
     dispatch(
       auth.Login({
         id: user.id,
+        email: user.email,
         name: user.name,
+        picture: user.picture,
+        mini: user.mini,
       })
     )
   }
@@ -45,7 +48,7 @@ function Register() {
   return (
     <div className="sm:max-w-xs">
       <Card className="p-8">
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} action={`${config.api.host}/api/register`}>
           <div className="mb-6">
             <forms.TextInput
               name="email"

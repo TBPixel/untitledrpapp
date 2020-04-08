@@ -11,7 +11,7 @@ function App({ sendMessage }) {
 
   return (
     <>
-      <section className="flex-grow px-2">
+      <section className="flex-grow px-4">
         <Card className="h-full px-3 py-2">
           {openChat ? (
             <Chat id={openChat.id} sender={sendMessage} />

@@ -6,25 +6,28 @@ export const slice = createSlice({
     user: {
       id: '',
       name: '',
+      email: '',
       picture: '',
       mini: '',
     },
   },
   reducers: {
     Login: (state, action) => {
-      const { id, name } = action.payload
+      const { id, name, email, picture, mini } = action.payload
 
       state.user = {
         id,
         name,
-        picture: '',
-        mini: '',
+        email,
+        picture,
+        mini,
       }
     },
     Logout: (state) => {
       state.user = {
         id: '',
         name: '',
+        email: '',
         picture: '',
         mini: '',
       }

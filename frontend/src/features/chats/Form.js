@@ -43,6 +43,7 @@ function Form({ name, conversationID, sender }) {
   return (
     <form className="flex items-end" onSubmit={onSubmit}>
       <forms.TextAreaInput
+        name={`message_${conversationID}`}
         value={message}
         setValue={setMessage}
         placeholder={`Message ${name}`}

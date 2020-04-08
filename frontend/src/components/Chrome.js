@@ -3,10 +3,10 @@ import Header from 'components/Header'
 
 function Chrome({ children }) {
   return (
-    <>
+    <div className="h-full flex flex-col">
       <Header />
-      <div>{children}</div>
-    </>
+      <div className="flex-grow">{children}</div>
+    </div>
   )
 }
 
