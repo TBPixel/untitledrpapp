@@ -160,14 +160,10 @@ func (s *Server) handleLogin() http.HandlerFunc {
 
 func (s *Server) handleLogout() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		session, err := s.sessions.Get(r, SessionName)
-		if err != nil {
-			// no return since error is non-fatal
-			log.Printf("error while decoding session: %v", err)
-		}
+		session, _ := s.sessions.Get(r, SessionName)
 
 		session.Options.MaxAge = -1
-		err = session.Save(r, w)
+		err := session.Save(r, w)
 		if err != nil {
 			log.Printf("error while deleting auth session: %v", err)
 		}
@@ -175,37 +171,34 @@ func (s *Server) handleLogout() http.HandlerFunc {
 }
 
 func (s *Server) createUserSession(id string, w http.ResponseWriter, r *http.Request) error {
-	session, err := s.sessions.Get(r, SessionName)
-	if err != nil {
-		log.Printf("error while decoding session: %v", err)
-	}
+	session, _ := s.sessions.Get(r, SessionName)
 	session.Values["user_id"] = id
 
 	return session.Save(r, w)
 }
 
+func (s *Server) expireUserSession(w http.ResponseWriter, r *http.Request) {
+	session, _ := s.sessions.Get(r, SessionName)
+	session.Options.MaxAge = -1
+	if err := session.Save(r, w); err != nil {
+		log.Printf("failed to expire session: %v", err)
+	}
+}
+
 func (s *Server) authGuard(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := s.sessions.Get(r, SessionName)
-		if err != nil {
-			// no return since error is non-fatal
-			log.Printf("error while decoding session: %v", err)
-		}
+		session, _ := s.sessions.Get(r, SessionName)
 
 		id, ok := session.Values["user_id"].(string)
 		if !ok {
+			s.expireUserSession(w, r)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
 		u, err := s.user.Find(id)
 		if err != nil {
-			session.Options.MaxAge = -1
-			err = session.Save(r, w)
-			if err != nil {
-				log.Printf("failed to invalid session for unknown user %v: %v", id, err)
-			}
-
+			s.expireUserSession(w, r)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -218,11 +211,7 @@ func (s *Server) authGuard(handler http.Handler) http.Handler {
 
 func (s *Server) guestGuard(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := s.sessions.Get(r, SessionName)
-		if err != nil {
-			// no return since error is non-fatal
-			log.Printf("error while decoding session: %v", err)
-		}
+		session, _ := s.sessions.Get(r, SessionName)
 
 		_, ok := session.Values["user_id"].(string)
 		if ok {

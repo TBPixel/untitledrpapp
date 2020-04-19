@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -111,6 +112,66 @@ func (s *Server) handleUpdateUser() http.HandlerFunc {
 		})
 		if err != nil {
 			log.Printf("error while updating user %v: %v", user.ID, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func (s *Server) handleUploadUserPicture() http.HandlerFunc {
+	type response struct {
+		Picture string `json:"picture"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID := chi.URLParam(r, "userID")
+		user, err := s.user.Find(userID)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+			return
+		}
+
+		authUser := r.Context().Value(backend.User{}).(backend.User)
+		if authUser.ID != user.ID {
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			return
+		}
+
+		// Parse our multipart form, 10 << 20 specifies a maximum
+		// upload of 10 MB files.
+		err = r.ParseMultipartForm(10 << 20)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		file, _, err := r.FormFile("picture")
+		if err != nil {
+			fmt.Printf("error retrieving the file: %v", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+
+		path, err := s.storage.Save(user.Name, file, r.Context())
+		if err != nil {
+			fmt.Printf("error saving user picture: %v", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		user.Picture = path
+		if err := s.user.Update(user.ID, user); err != nil {
+			fmt.Printf("error updating user profile with new picture path: %v", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		err = json.NewEncoder(w).Encode(&response{
+			Picture: path,
+		})
+		if err != nil {
+			log.Printf("error encoding json response: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

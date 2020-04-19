@@ -26,12 +26,25 @@ func (s *Server) route() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.SetHeader("Accept", "application/json"))
-	r.Use(middleware.SetHeader("Content-Type", "application/json"))
+	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(CORS.Handler)
 
+	// static files
+	fs := http.FileServer(http.Dir("storage/local/"))
+	r.Get("/static/", http.StripPrefix("/static/", fs).ServeHTTP)
+
+	// websocket
 	r.With(s.authGuard).Get("/connect", s.handleWebsocketConnect)
-	r.With(middleware.Timeout(60*time.Second)).Route("/api", func(r chi.Router) {
+
+	r.With(s.authGuard).Route("/upload", func(r chi.Router) {
+		r.Post("/users/{userID}/picture", s.handleUploadUserPicture())
+	})
+
+	// API
+	r.Route("/api", func(r chi.Router) {
+		r.Use(middleware.SetHeader("Accept", "application/json"))
+		r.Use(middleware.SetHeader("Content-Type", "application/json"))
+
 		r.With(s.guestGuard).Post("/login", s.handleLogin())
 		r.With(s.guestGuard).Post("/register", s.handleRegister())
 		r.With(s.authGuard).Get("/logout", s.handleLogout())

@@ -11,9 +11,10 @@ import (
 type Server struct {
 	domain string
 
-	auth AuthManager
-	chat ChatManager
-	user UserManager
+	auth    AuthManager
+	chat    ChatManager
+	user    UserManager
+	storage FileStorer
 
 	context  context.Context
 	hub      *Hub
@@ -21,12 +22,13 @@ type Server struct {
 }
 
 // NewServer pre-constructs a server instance
-func NewServer(domain string, auth AuthManager, chat ChatManager, user UserManager, sessions sessions.Store, hub *Hub, context context.Context) *Server {
+func NewServer(domain string, auth AuthManager, chat ChatManager, user UserManager, storage FileStorer, sessions sessions.Store, hub *Hub, context context.Context) *Server {
 	s := &Server{
 		domain:   domain,
 		auth:     auth,
 		chat:     chat,
 		user:     user,
+		storage:  storage,
 		context:  context,
 		hub:      hub,
 		sessions: sessions,

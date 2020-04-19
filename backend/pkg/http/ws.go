@@ -63,7 +63,7 @@ type client struct {
 	user *backend.User
 
 	hub  *Hub
-	conn *websocket.Conn
+	peer *websocket.Conn
 	read chan *message
 }
 
@@ -174,7 +174,7 @@ func (h *Hub) Upgrade(user *backend.User, w http.ResponseWriter, r *http.Request
 	return &client{
 		user: user,
 		hub:  h,
-		conn: conn,
+		peer: conn,
 		read: make(chan *message),
 	}, nil
 }
@@ -258,15 +258,15 @@ func (c *client) Connect() {
 func (c *client) Sending() {
 	defer func() {
 		c.hub.disconnect <- c
-		c.conn.Close()
+		c.peer.Close()
 	}()
 
-	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	c.peer.SetReadLimit(maxMessageSize)
+	c.peer.SetReadDeadline(time.Now().Add(pongWait))
+	c.peer.SetPongHandler(func(string) error { c.peer.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
 		var msg message
-		if err := c.conn.ReadJSON(&msg); err != nil {
+		if err := c.peer.ReadJSON(&msg); err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error %v", err)
 			}
@@ -281,16 +281,16 @@ func (c *client) Receiving() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.conn.Close()
+		c.peer.Close()
 	}()
 
 	for {
 		select {
 		case msg, ok := <-c.read:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			c.peer.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				c.peer.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
@@ -298,13 +298,14 @@ func (c *client) Receiving() {
 				continue
 			}
 
-			err := c.conn.WriteJSON(&msg)
+			err := c.peer.WriteJSON(&msg)
 			if err != nil {
+				log.Printf("failed to write message to peer: %v", err)
 				return
 			}
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			c.peer.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.peer.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
 		}

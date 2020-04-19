@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/tbpixel/rp-app/backend/pkg/storage"
+
 	"github.com/tbpixel/rp-app/backend/chat"
 
 	"github.com/tbpixel/rp-app/backend/user"
@@ -14,6 +16,11 @@ import (
 )
 
 func main() {
+	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = "local"
+	}
+
 	domain := os.Getenv("DOMAIN")
 	if domain == "" {
 		domain = "localhost"
@@ -31,6 +38,13 @@ func main() {
 
 	ctx := context.Background()
 
+	var fs http.FileStorer
+	if env == "local" {
+		fs = storage.NewLocalStorage(ctx)
+	} else {
+		// todo: prod storage
+	}
+
 	userStore := user.NewMemoryStore()
 	auth := user.NewAuth(userStore)
 	chats := chat.NewManager(chat.NewMemoryStore())
@@ -39,7 +53,7 @@ func main() {
 	hub := http.NewHub(domain, users, ctx)
 	go hub.Listen()
 
-	server := http.NewServer(domain, auth, chats, users, sessions, hub, ctx)
+	server := http.NewServer(domain, auth, chats, users, fs, sessions, hub, ctx)
 
 	address := fmt.Sprintf("%s:%s", domain, port)
 	log.Printf("server listening @ http://%s", address)
