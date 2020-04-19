@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 
 function Card({ children, className }) {
   return (
-    <div className={`bg-gray-100 shadow-md rounded ${className || ''}`}>
+    <div className={`bg-gray-750 shadow-md rounded ${className || ''}`}>
       {children}
     </div>
   )

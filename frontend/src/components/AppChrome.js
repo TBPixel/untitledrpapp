@@ -80,7 +80,7 @@ function AppChrome() {
   }, [lastMessage, convos, user.id, dispatch])
 
   return (
-    <div className="h-full flex pt-3 px-4 pb-4">
+    <div className="h-full flex px-4 pb-6">
       <div className="w-16 h-full">
         <Sidebar />
       </div>

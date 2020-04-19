@@ -31,8 +31,8 @@ function Login() {
         id: user.id,
         name: user.name,
         email: user.email,
-        picture: user.picture,
         mini: user.mini,
+        picture: user.picture,
       })
     )
   }
@@ -44,12 +44,15 @@ function Login() {
   return (
     <div className="sm:max-w-xs">
       <Card className="p-8">
-        <form onSubmit={onSubmit} action={`${config.api.host}/api/login`}>
-          <div className="mb-6">
+        <form
+          onSubmit={onSubmit}
+          action={`${config.api.host}/api/login`}
+          autoComplete="off">
+          <div className="mb-8">
             <forms.TextInput
               name="email"
               value={input.email}
-              setValue={onInputChange}
+              setValue={(e) => onInputChange(e, e.currentTarget.value)}
               placeholder="foobar@example.com"
               disabled={request.loading}
               required>
@@ -57,12 +60,12 @@ function Login() {
             </forms.TextInput>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-8">
             <forms.TextInput
               type="password"
               name="password"
               value={input.password}
-              setValue={onInputChange}
+              setValue={(e) => onInputChange(e, e.currentTarget.value)}
               placeholder="**************"
               disabled={request.loading}
               required>
@@ -70,12 +73,9 @@ function Login() {
             </forms.TextInput>
           </div>
 
-          <div className="mb-6 mt-8 flex items-center justify-between">
+          <div className="mb-8 mt-8 flex items-center justify-between">
             <Button type="submit" disabled={request.loading}>
               Login
-            </Button>
-            <Button styles="plain">
-              <Link to="/password-reset">Forgot Password?</Link>
             </Button>
           </div>
 

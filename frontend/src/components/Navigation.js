@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link, useHistory, useLocation } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import config from 'conf'
 import * as auth from 'features/auth/store'
@@ -12,7 +12,6 @@ const NavItem = ({ children }) => (
 
 function Navigation() {
   const history = useHistory()
-  const location = useLocation()
   const user = useSelector(auth.SelectUser)
   const dispatch = useDispatch()
   const onLogout = async () => {
@@ -27,11 +26,6 @@ function Navigation() {
     <ul className="flex sm:justify-end">
       {user ? (
         <>
-          {!location.pathname.includes('/app') && (
-            <NavItem>
-              <Link to="/app">Chat</Link>
-            </NavItem>
-          )}
           <NavItem>
             <button onClick={onLogout}>Logout</button>
           </NavItem>

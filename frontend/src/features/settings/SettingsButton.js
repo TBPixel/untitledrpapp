@@ -11,7 +11,7 @@ function SettingsButton({ isFocussed }) {
         <MdSettings
           size={64}
           className={`${
-            isFocussed ? 'text-blue-500' : 'text-gray-500'
+            isFocussed ? 'text-blue-500' : 'text-gray-700'
           } hover:text-blue-500`}
         />
       </Link>

@@ -34,15 +34,14 @@ function Form() {
   }
 
   return (
-    <form onSubmit={onSearch} className="flex">
+    <form onSubmit={onSearch} className="flex" autoComplete="off">
       <div className="flex-grow pr-3">
         <forms.TextInput
           name="query"
           value={input.query}
-          setValue={onInputChange}
+          setValue={(e) => onInputChange(e, e.currentTarget.value)}
           placeholder="Search"
-          hideLabel
-          className="border-gray-400">
+          hideLabel>
           Search
         </forms.TextInput>
       </div>

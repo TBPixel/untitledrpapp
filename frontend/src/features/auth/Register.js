@@ -35,8 +35,8 @@ function Register() {
         id: user.id,
         email: user.email,
         name: user.name,
-        picture: user.picture,
         mini: user.mini,
+        picture: user.picture,
       })
     )
   }
@@ -48,13 +48,16 @@ function Register() {
   return (
     <div className="sm:max-w-xs">
       <Card className="p-8">
-        <form onSubmit={onSubmit} action={`${config.api.host}/api/register`}>
-          <div className="mb-6">
+        <form
+          onSubmit={onSubmit}
+          action={`${config.api.host}/api/register`}
+          autoComplete="off">
+          <div className="mb-8">
             <forms.TextInput
               name="email"
               type="email"
               value={input.email}
-              setValue={onInputChange}
+              setValue={(e) => onInputChange(e, e.currentTarget.value)}
               placeholder="foobar@example.com"
               disabled={request.loading}
               required>
@@ -62,11 +65,11 @@ function Register() {
             </forms.TextInput>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-8">
             <forms.TextInput
               name="name"
               value={input.name}
-              setValue={onInputChange}
+              setValue={(e) => onInputChange(e, e.currentTarget.value)}
               placeholder="Foobar"
               disabled={request.loading}
               required>
@@ -74,12 +77,12 @@ function Register() {
             </forms.TextInput>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-8">
             <forms.TextInput
               type="password"
               name="password"
               value={input.password}
-              setValue={onInputChange}
+              setValue={(e) => onInputChange(e, e.currentTarget.value)}
               placeholder="**************"
               disabled={request.loading}
               required>
@@ -87,12 +90,12 @@ function Register() {
             </forms.TextInput>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-8">
             <forms.TextInput
               type="password"
               name="password_confirmation"
               value={input.password_confirmation}
-              setValue={onInputChange}
+              setValue={(e) => onInputChange(e, e.currentTarget.value)}
               placeholder="**************"
               disabled={request.loading}
               required>

@@ -21,11 +21,12 @@ export const useWindowSize = () => {
 export const useInputChange = (initialState) => {
   const [input, setInput] = useState(initialState)
 
-  const onInputChange = (e) =>
+  const onInputChange = (e, value) => {
     setInput({
       ...input,
-      [e.currentTarget.name]: e.currentTarget.value,
+      [e.currentTarget.name]: value,
     })
+  }
 
   return [input, onInputChange]
 }

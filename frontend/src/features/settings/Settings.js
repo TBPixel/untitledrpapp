@@ -1,14 +1,16 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import useFetch from 'use-http'
 import { useInputChange } from 'helpers'
 import config from 'conf'
+import * as alerts from 'features/alerts/store'
 import * as auth from 'features/auth/store'
 import * as forms from 'components/forms'
 import Card from 'components/Card'
 
 function Settings() {
   const dispatch = useDispatch()
+  const [picture, setPicture] = useState(null)
   const user = useSelector(auth.SelectUser)
   const [request, response] = useFetch(config.api.host, {
     credentials: 'include',
@@ -21,41 +23,84 @@ function Settings() {
   })
 
   const onSubmit = async () => {
-    await request.put(`/api/users/${user.id}`, input)
+    const u = await request.put(`/api/users/${user.id}`, {
+      picture: input.picture,
+      mini: input.mini,
+    })
     if (!response.ok) {
       return
     }
 
-    // todo success message
+    dispatch(
+      auth.Update({
+        mini: u.mini,
+        picture: u.picture,
+      })
+    )
+
+    dispatch(
+      alerts.Success({
+        title: 'Profile updated!',
+        message: 'Your profile has been updated!',
+      })
+    )
+  }
+
+  const handleFileUpload = async (e) => {
+    e.preventDefault()
   }
 
   return (
     <section className="flex-grow px-4">
-      <Card className="h-full px-3 py-2">
+      <Card className="p-6">
         <form
-          onSubmit={onSubmit}
-          action={`${config.api.host}/api/users/${user.id}`}>
+          encType="multipart/form-data"
+          onSubmit={handleFileUpload}
+          action={`${config.api.host}/upload/users/${user.id}`}
+          autoComplete="off">
           <div className="flex">
             <div className="w-1/3">
-              <h4>General</h4>
+              <h4>Profile Picture</h4>
             </div>
             <div className="w-2/3">
-              <div className="mb-6">
+              <div className="mb-8">
+                <forms.ImageInput
+                  name="picture"
+                  value={picture}
+                  setValue={setPicture}>
+                  Profile Picture
+                </forms.ImageInput>
+              </div>
+            </div>
+          </div>
+        </form>
+      </Card>
+
+      <form
+        onSubmit={onSubmit}
+        action={`${config.api.host}/api/users/${user.id}`}>
+        <Card className="flex p-6">
+          <div className="w-1/3">
+            <h4>General</h4>
+          </div>
+          <div className="w-2/3">
+            <div className="flex mb-8">
+              <div className="w-1/2 mr-8">
                 <forms.TextInput
                   name="name"
                   value={input.name}
-                  setValue={onInputChange}
+                  setValue={(e) => onInputChange(e, e.currentTarget.value)}
                   placeholder="foobar"
                   disabled={true}>
                   Username
                 </forms.TextInput>
               </div>
 
-              <div className="mb-6">
+              <div className="w-1/2">
                 <forms.TextInput
                   name="email"
                   value={input.email}
-                  setValue={onInputChange}
+                  setValue={(e) => onInputChange(e, e.currentTarget.value)}
                   placeholder="foobar@example.com"
                   disabled={true}>
                   Email
@@ -63,26 +108,25 @@ function Settings() {
               </div>
             </div>
           </div>
+        </Card>
 
-          <div className="flex">
-            <div className="w-1/3">
-              <h4>Appearance</h4>
-              <p></p>
-            </div>
-            <div className="w-2/3">
-              <div className="mb-6">
-                <forms.TextAreaInput
-                  name="mini"
-                  value={input.mini}
-                  setValue={onInputChange}
-                  placeholder="Your custom mini profile">
-                  Mini
-                </forms.TextAreaInput>
-              </div>
+        <Card className="flex p-6">
+          <div className="w-1/3">
+            <h4>Appearance</h4>
+            <p></p>
+          </div>
+          <div className="w-2/3">
+            <div className="mb-8">
+              <forms.TextAreaInput
+                name="mini"
+                value={input.mini}
+                setValue={(e) => onInputChange(e, e.currentTarget.value)}>
+                Mini Profile
+              </forms.TextAreaInput>
             </div>
           </div>
-        </form>
-      </Card>
+        </Card>
+      </form>
     </section>
   )
 }

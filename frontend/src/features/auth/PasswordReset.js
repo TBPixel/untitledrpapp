@@ -8,7 +8,7 @@ function PasswordReset() {
   const [input, onInputChange] = useInputChange({
     email: '',
   })
-  const onSubmit = e => {
+  const onSubmit = (e) => {
     e.preventDefault()
 
     console.log(input)
@@ -17,20 +17,20 @@ function PasswordReset() {
   return (
     <div className="sm:max-w-xs">
       <Card className="p-8">
-        <form onSubmit={onSubmit}>
-          <div className="mb-6">
+        <form onSubmit={onSubmit} autoComplete="off">
+          <div className="mb-8">
             <forms.TextInput
               type="email"
               name="email"
               value={input.email}
-              setValue={onInputChange}
+              setValue={(e) => onInputChange(e, e.currentTarget.value)}
               placeholder="foobar@example.com"
               required>
               Email
             </forms.TextInput>
           </div>
 
-          <div className="mb-6 mt-8 flex items-center justify-between">
+          <div className="mb-8 mt-8 flex items-center justify-between">
             <Button type="submit">Request Password Reset</Button>
           </div>
         </form>

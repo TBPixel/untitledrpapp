@@ -32,10 +32,16 @@ export const slice = createSlice({
         mini: '',
       }
     },
+    Update: (state, action) => {
+      const { picture, mini } = action.payload
+
+      state.user.picture = picture
+      state.user.mini = mini
+    },
   },
 })
 
-export const { Login, Logout } = slice.actions
+export const { Login, Logout, Update } = slice.actions
 
 export const SelectUser = (state) => {
   if (state.auth.user.id === '') {

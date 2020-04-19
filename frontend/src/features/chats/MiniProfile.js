@@ -38,7 +38,7 @@ function MiniProfile({ name, picture, mini }) {
   return (
     <>
       {hasBody ? (
-        <div className="w-full h-20">
+        <div className="w-full h-16">
           <div className="max-h-full">{render}</div>
         </div>
       ) : (
@@ -47,7 +47,7 @@ function MiniProfile({ name, picture, mini }) {
             {picture ? (
               <>
                 <img
-                  className="block w-20 h-20 pr-2 object-contain"
+                  className="block w-16 h-16 pr-2 object-contain"
                   src={picture}
                   alt={`${name}'s profile`}
                 />
@@ -56,7 +56,7 @@ function MiniProfile({ name, picture, mini }) {
             ) : (
               <>
                 <div className="pr-2">
-                  <FaUserAlt size={5 * 16} className="text-gray-500" />
+                  <FaUserAlt size={4 * 16} className="text-gray-500" />
                 </div>
                 <span>{name}</span>
               </>

@@ -41,13 +41,15 @@ function Form({ name, conversationID, sender }) {
   }
 
   return (
-    <form className="flex items-end" onSubmit={onSubmit}>
+    <form className="flex items-end" onSubmit={onSubmit} autoComplete="off">
       <forms.TextAreaInput
         name={`message_${conversationID}`}
         value={message}
-        setValue={setMessage}
+        setValue={(e) => setMessage(e.currentTarget.value)}
         placeholder={`Message ${name}`}
-      />
+        hideLabel>
+        {`Message ${name}`}
+      </forms.TextAreaInput>
       <div className="ml-2">
         <Button type="submit" disabled={!message}>
           <MdSend />

@@ -1,11 +1,14 @@
-import React, { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import React, { useCallback, useRef, useState, useLayoutEffect } from 'react'
 import PropTypes from 'prop-types'
 import { VariableSizeList as List } from 'react-window'
+import { useWindowSize } from 'helpers'
 import Message from 'features/chats/Message'
 
-function History({ messages, textareaHeight }) {
+function History({ messages, textAreaHeight }) {
   const chatHistoryRef = useRef()
   const listRef = useRef()
+  const [windowWidth, windowHeight] = useWindowSize()
+  const [initialHeight, setInitialHeight] = useState(0)
   const [listHeight, setListHeight] = useState(0)
   const sizeMap = useRef({})
   const getSize = useCallback((index) => sizeMap.current[index] || 60, [])
@@ -20,9 +23,16 @@ function History({ messages, textareaHeight }) {
   useLayoutEffect(() => {
     const chatHistory = chatHistoryRef.current
     if (chatHistory) {
-      setListHeight(chatHistory.offsetHeight - textareaHeight)
+      setInitialHeight(chatHistory.offsetHeight)
     }
-  }, [textareaHeight])
+  }, [windowWidth, windowHeight])
+
+  useLayoutEffect(() => {
+    const chatHistory = chatHistoryRef.current
+    if (chatHistory) {
+      setListHeight(initialHeight - textAreaHeight)
+    }
+  }, [initialHeight, textAreaHeight])
 
   return (
     <div ref={chatHistoryRef} className="h-full">
@@ -64,6 +74,7 @@ const message = PropTypes.shape({
 
 History.propTypes = {
   messages: PropTypes.arrayOf(message).isRequired,
+  textAreaHeight: PropTypes.number.isRequired,
 }
 
 export default History

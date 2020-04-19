@@ -23,6 +23,9 @@ function Root() {
         auth.Login({
           id: user.id,
           name: user.name,
+          email: user.email,
+          mini: user.mini,
+          picture: user.picture,
         })
       )
     }
