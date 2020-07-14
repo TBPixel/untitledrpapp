@@ -1,0 +1,15 @@
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+
+*:focus {
+  outline: 0;
+  box-shadow: 0 0 0 3px #3182ce;
+}
+
+.gradient-gray-900-to-800 {
+  background: rgb(26,32,44);
+  background: linear-gradient(0deg, rgba(26,32,44,1) 0%, rgba(45,55,72,1) 100%); 
+}
