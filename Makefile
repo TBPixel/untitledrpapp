@@ -1,2 +1,2 @@
 heroku:
-	git subtree push --prefix backend heroku master
+	git subtree push --prefix untitledrpapp heroku master

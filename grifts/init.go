@@ -1,7 +1,7 @@
 package grifts
 
 import (
-	"backend/actions"
+	"untitledrpapp/actions"
 
 	"github.com/gobuffalo/buffalo"
 )

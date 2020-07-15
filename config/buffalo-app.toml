@@ -1,5 +1,5 @@
-name = "backend"
-bin = "bin/backend"
+name = "untitledrpapp"
+bin = "bin/untitledrpapp"
 vcs = "git"
 with_pop = false
 with_sqlite = false
