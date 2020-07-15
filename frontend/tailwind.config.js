@@ -1,23 +1,21 @@
-const { colors } = require('tailwindcss/defaultTheme')
-
 module.exports = {
+  purge: [
+    './public/**/*.html',
+    './src/**/*.js',
+    './src/**/*.ts',
+    './src/**/*.jsx',
+    './src/**/*.tsx',
+  ],
   theme: {
     extend: {
-      colors: {
-        gray: {
-          ...colors.gray,
-          '750': '#374153',
-        },
+      margin: {
+        '1.5': '0.375rem'
       },
-      spacing: {
-        '72': '18rem',
-        '84': '21rem',
-        '96': '24rem',
-      },
-    },
+      lineHeight: {
+        'tighter': '1.125'
+      }
+    }
   },
-  variants: {
-    borderColor: ['hover', 'focus', 'active'],
-  },
+  variants: {},
   plugins: [],
 }
