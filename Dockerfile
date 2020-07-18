@@ -1,39 +1,30 @@
-# This is a multi-stage Dockerfile and requires >= Docker 17.05
-# https://docs.docker.com/engine/userguide/eng-image/multistage-build/
-FROM gobuffalo/buffalo:v0.16.10 as builder
+FROM golang:1.14 AS builder
 
-ENV GO111MODULE on
-ENV GOPROXY http://proxy.golang.org
+COPY ${PWD} /app
+WORKDIR /app
 
-RUN mkdir -p /src/untitledrpapp
-WORKDIR /src/untitledrpapp
+# Toggle CGO on your app requirement
+RUN CGO_ENABLED=0 go build -ldflags '-s -w -extldflags "-static"' -o /app/appbin *.go
 
-# Copy the Go Modules manifests
-COPY go.mod go.mod
-COPY go.sum go.sum
-# cache deps before building and copying source so that we don't need to re-download as much
-# and so that source changes don't invalidate our downloaded layer
-RUN go mod download
 
-ADD . .
-RUN buffalo build --static -o /bin/app
+FROM debian:stable-slim
 
-FROM alpine
-RUN apk add --no-cache bash
-RUN apk add --no-cache ca-certificates
+# Following commands are for installing CA certs (for proper functioning of HTTPS and other TLS)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		ca-certificates  \
+        netbase \
+        && rm -rf /var/lib/apt/lists/ \
+        && apt-get autoremove -y && apt-get autoclean -y
 
-WORKDIR /bin/
+# Add new user 'appuser'. App should be run without root privileges as a security measure
+RUN adduser --home "/appuser" --disabled-password appuser \
+    --gecos "appuser,-,-,-"
+USER appuser
 
-COPY --from=builder /bin/app .
+COPY --from=builder /app/appbin /home/appuser/app/appbin
 
-# Uncomment to run the binary in "production" mode:
-# ENV GO_ENV=production
+WORKDIR /home/appuser/app
 
-# Bind the app to 0.0.0.0 so it can be seen from outside the container
-ENV ADDR=0.0.0.0
+EXPOSE 8000
 
-EXPOSE 3000
-
-# Uncomment to run the migrations before running the binary:
-# CMD /bin/app migrate; /bin/app
-CMD exec /bin/app
+CMD ["./appbin"]
