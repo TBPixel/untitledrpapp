@@ -20,7 +20,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	services := api.Services{}
+	services := api.Services{
+		Config: *app,
+	}
 	mux := http.NewMux(services)
 
 	log.Info(fmt.Sprintf("Server listening at: %s:%v", app.Host, app.Port))
